@@ -1,0 +1,5 @@
+streamlit
+pandas
+replicate
+validators
+streamlit-extras
