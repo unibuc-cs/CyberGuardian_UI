@@ -3,3 +3,5 @@ pandas
 replicate
 validators
 streamlit-extras
+streamlit-feedback
+
