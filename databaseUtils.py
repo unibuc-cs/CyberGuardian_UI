@@ -108,4 +108,5 @@ class CredentialsDB:
         self.currentUser = None
         return False
 
-
+    def logDefaultUser(self):
+        self.currentUser = SecurityOfficer()

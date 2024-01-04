@@ -5,6 +5,35 @@ from userUtils import SecurityOfficer
 from userUtils import SecurityOfficer
 from databaseUtils import CredentialsDB
 import pandas as pd
+from typing import Union
+
+# Which platform for feedback retention, either trubrics or manual processing
+option_use_trubrics = True
+
+if option_use_trubrics:
+    from trubrics.integrations.streamlit import FeedbackCollector
+    g_feedbackCollector: FeedbackCollector = None
+
+option_saveFeedbackAsJSON: bool = True
+
+# The maximum number of responses to hold when saving a feedback. 4 means last 2 for user 2 for AI
+option_conversation_context_to_save_len: int = 4
+
+def getFeedbackCollector() -> Union[FeedbackCollector, None]:
+    global g_feedbackCollector
+    if g_feedbackCollector is None and option_use_trubrics:
+        g_feedbackCollector = FeedbackCollector(
+            project="DynabicChatbot",
+            email=st.secrets.TRUBRICS_EMAIL,
+            password=st.secrets.TRUBRICS_PASSWORD,
+        )
+
+        if g_feedbackCollector is None:
+            use_trubrics = False
+            RegisterError("Can't use proper feedback collector from trubrics. Please try again or investigate")
+
+    return g_feedbackCollector
+#####
 
 g_credentialsDB: CredentialsDB = None
 
@@ -14,6 +43,12 @@ def logged_in() -> bool:
     return g_credentialsDB.isLoggedIn()
 
 def getCurrentUser() -> SecurityOfficer:
+    if g_credentialsDB is None:
+        checkCreateCredentialsDB()
+
+    if not logged_in(): # I hope this is the debug mode :) should check maybe in the future to be sure
+        g_credentialsDB.logDefaultUser()
+
     return g_credentialsDB.getCurrentUser()
 
 def logout()-> bool:

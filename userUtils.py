@@ -20,21 +20,26 @@ class Preference_Emojis(IntEnum):
     USE_EMOJIS = 0
     NO_EMOJIS = 1
 
+class Preference_FeedbackArea(IntEnum):
+    ALLOW_FEEDBACK_ON_HISTORY = 0
+    ALLOW_FEEDBACK_ONLY_ON_LAST_MSG = 1
+
 class SecurityOfficer():
     def __init__(self):
         super().__init__()
 
         self.loggedin : bool = False
 
-        self.name: str = ""
-        self.username: str = ""
-        self.password: str = ""
+        self.name: str = "defaultUser"
+        self.username: str = "defaultUserName"
+        self.password: str = "defaultUserPassword"
         self.birthday: datetime.datetime = datetime.datetime.now()
 
         self.expertise: SecurityOfficerExpertise = SecurityOfficerExpertise.BEGINNER
         self.preference: ResonsePreferences = ResonsePreferences.DETAILED
         self.politely: Preference_Politely = Preference_Politely.POLITE_PRESENTATION
         self.emojis: Preference_Emojis = Preference_Emojis.USE_EMOJIS
+        self.feedbackArea: Preference_FeedbackArea = Preference_FeedbackArea.ALLOW_FEEDBACK_ONLY_ON_LAST_MSG
 
         self.motivation_factor: float = 1.0 # A float between 0-1
 
