@@ -4,4 +4,4 @@ replicate
 validators
 streamlit-extras
 streamlit-feedback
-
+trubrics
