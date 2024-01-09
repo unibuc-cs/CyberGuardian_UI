@@ -1,6 +1,9 @@
 import streamlit as st
 import base64
 
+# Use Metrics for showing resources utilization updates between the two https://docs.streamlit.io/library/api-reference/data/st.metric
+# Use below column_config to show pandas tables and stats
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -9,6 +12,14 @@ import random
 df = pd.DataFrame(np.random.randn(50, 20), columns=("col %d" % i for i in range(20)))
 
 st.dataframe(df.style.highlight_max(axis=0))
+
+import streamlit as st
+
+st.metric(label="Gas price", value=4, delta=-0.5,
+    delta_color="inverse")
+
+st.metric(label="Active developers", value=123, delta=123,
+    delta_color="off")
 
 df = pd.DataFrame(
     {
