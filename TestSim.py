@@ -13,6 +13,29 @@ df = pd.DataFrame(np.random.randn(50, 20), columns=("col %d" % i for i in range(
 
 st.dataframe(df.style.highlight_max(axis=0))
 
+############
+
+import pandas as pd
+df = pd.read_csv("data/sim/RESOURCES_OCCUPANCY_HACKED_False.csv")
+
+"""
+chart_data = pd.DataFrame(np.random.randn(20, 3), columns=["col1", "col2", "col3"])
+
+st.line_chart(
+   chart_data, x="col1", y=["col2", "col3"], color=["#FF0000", "#0000FF"]  # Optional
+)
+"""
+st.line_chart(
+   df, x="time", y=["dataretrieval_occupancy", "dataupdater_occupancy"], color=["#FF0000", "#0000FF"]  # Optional
+)
+
+df2 = pd.read_csv("data/sim/RESOURCES_OCCUPANCY_HACKED_True.csv")
+st.line_chart(
+   df2, x="time", y=["dataretrieval_occupancy", "dataupdater_occupancy"], color=["#FF0000", "#0000FF"]  # Optional
+)
+
+############
+
 import streamlit as st
 
 st.metric(label="Gas price", value=4, delta=-0.5,
