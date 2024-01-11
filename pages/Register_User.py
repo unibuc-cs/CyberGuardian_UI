@@ -142,10 +142,10 @@ def register_user_behavioral(form_name: str, location: str = 'main') -> bool:
 
     # How likely is to attack from inside
     internalDamageChoice = UIUtil_UserResponse(
-        question="Would you ever try to test our production systems reliability from your own perspective without having your "
-                 "lead to know about it ? (Hidden: this is the intentional damage factor thing)",
+        question="Would you try to test the reliability of our production systems without a concrete task from your "
+                 "teamlead? (Hidden: this is the intentional damage factor thing)",
         classtype=register_user_form.radio,
-        options=[":rainbow[No, ever]", "Just for fun or to test my thing :movie_camera:", "***Maybe***"])
+        options=[":rainbow[Never]", "Just for fun or to test it a bit :movie_camera:", "***Maybe***"])
     if internalDamageChoice == 0:
         user.intentional_damage_factor = 0.0
     elif internalDamageChoice == 1:
@@ -154,8 +154,8 @@ def register_user_behavioral(form_name: str, location: str = 'main') -> bool:
         user.intentional_damage_factor = 1.0
 
     convinceChoice = UIUtil_UserResponse(classtype=register_user_form.radio,
-                                         question="Would you try to convince a colleague to give you his credentials "
-                                                  "or send him an external link to open?",
+                                         question="Would you try to convince colleagues to give you their credentials "
+                                                  "or send them an external link to open?",
                                          options=['No', 'Yes', 'Maybe'])
     convinceValue = 0.0
     if convinceChoice == 1:
@@ -187,7 +187,7 @@ def register_user_behavioral(form_name: str, location: str = 'main') -> bool:
 
     confidenceChoise = UIUtil_UserResponse(classtype=register_user_form.selectbox,
                                            question="How confident ar you on your job  (Hidden : Motivation factor) ?",
-                                           options=['Very confident', 'Somehow confident', 'No confidence at all'])
+                                           options=['Very confident', 'Somehow confident', 'Not confident'])
     confidenceValue = 1.0
     if confidenceChoise == 1:
         confidenceValue = 0.5
@@ -219,13 +219,13 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
         register_user_form = st.sidebar.form('Technical evaluation')
 
     register_user_form.subheader(form_name)
-    csu.ShowTODO("TODO FMI: this will be an LLM guided interview with questions based on your uploaded CV,"
-                 "previous answers and feedback. A dynamic interview with different threads of discussions. Stay tuned!")
+    csu.ShowTODO("TODO FMI: this will be an LLM-guided interview with questions based on an uploaded CV,"
+                 "previous answers and feedback. A dynamic interview with different threads of discussion. Stay tuned!")
 
     user = getInProgressRegistrationUser()
 
     # Expertise evaluation
-    experienceChoice = UIUtil_UserResponse(question="How many years of expertise do you have in security mechanisms?",
+    experienceChoice = UIUtil_UserResponse(question="How many years of expertise do you have in security domain?",
                                            classtype=register_user_form.radio,
                                            options=["1-3 years", "3-7 years", ">7 years"])
     user.expertise = SecurityOfficerExpertise.BEGINNER
@@ -238,22 +238,22 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
 
     ######################################### Tehnical questions ######################
 
-    register_user_form.write('What is a pishing attack? Check all that apply ')
-    option_1 = register_user_form.checkbox('An attempt to steal sensitive information, typically in the form of usernames, passwords, credit card numbers, bank account information or other important data in order to utilize or sell the stolen information.', key="11")
-    option_2 = register_user_form.checkbox('Attacker encripts data on your devices and request ', key="12")
-    option_3 = register_user_form.checkbox('Form of malware attack in which an attacker seizes the user’s data, folders, or entire device until a ‘ransom’ fee is paid', key="13")
+    register_user_form.write('What is a phishing attack? Check all that apply')
+    option_1 = register_user_form.checkbox('An attempt to steal sensitive information, typically in the form of usernames, passwords, credit cards, bank account information or other important data in order to utilize or sell the stolen information.', key="11")
+    option_2 = register_user_form.checkbox('Using a program that records every keystroke made by a computer user', key="12")
+    option_3 = register_user_form.checkbox('Form of malware attack in which an attacker encrypts the user’s data, folders, or entire device until a ‘ransom’ fee is paid', key="13")
     option_4 = register_user_form.checkbox('A virus from a USB stick', key="14")
 
     tech_que_score_1 = 1.0 if option_1 is True and option_2 is False and option_3 is False and option_4 is False else 0.0
 
     register_user_form.divider()
 
-    register_user_form.write('What is a ransomware attack? Check all that apply ')
+    register_user_form.write('What is a ransomware attack? Check all that apply')
     option_1 = register_user_form.checkbox(
-        'Attackers are sending frequest or large data from different IPs to consume the server resources', key="21")
-    option_2 = register_user_form.checkbox('Attacker encripts data on your devices and request ', key="22")
+        'Attackers are sending frequent or large data from different IPs to consume the server resources', key="21")
+    option_2 = register_user_form.checkbox('Using a program that records every keystroke made by a computer user', key="22")
     option_3 = register_user_form.checkbox(
-        'Form of malware attack in which an attacker seizes the user’s data, folders, or entire device until a ‘ransom’ fee is paid', key="23")
+        'Form of malware attack in which an attacker encrypts the user’s data, folders, or entire device until a ‘ransom’ fee is paid', key="23")
     option_4 = register_user_form.checkbox('A virus from a USB stick', key="24")
 
     tech_que_score_2 = 1.0 if option_1 is False and option_2 is True and option_3 is False and option_4 is False else 0.0
@@ -262,12 +262,12 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
 
     register_user_form.write('What is a DDoS attack? Check all that apply ')
     option_1 = register_user_form.checkbox(
-        'Attackers are sending frequest or large data from a single IP to consume the server resources', key="31")
-    option_2 = register_user_form.checkbox('Attacker encrypts data on your devices and request ', key="32")
+        'Attackers are sending frequent or large data from a single IP to consume the server resources', key="31")
+    option_2 = register_user_form.checkbox('Using a program that records every keystroke made by a computer user', key="32")
     option_3 = register_user_form.checkbox(
         'Multiple IPs from different locations try to connect and send information to servers or network resources',
         key="33")
-    option_4 = register_user_form.checkbox('Form of malware attack in which an attacker seizes the user’s data, '
+    option_4 = register_user_form.checkbox('Form of malware attack in which an attacker encrypts the user’s data, '
                                            'folders, or entire device until a ‘ransom’ fee is paid', key="34")
 
     tech_que_score_3 = 1.0 if option_1 is False and option_2 is False and option_3 is True and option_4 is False else 0.0
@@ -279,7 +279,7 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
 
     ########## Tech teamwork set of questions ###########
     team_work_1_choice = UIUtil_UserResponse(
-        question="Would you respect the best practices in the field suggested by the company, e.g., make regular backups, ? ",
+        question="Do you respect the best practices in the field suggested by the company, e.g., make regular backups? ",
         options=['Yes', 'Sometimes I know better what to do'],
         classtype=register_user_form.radio)
     team_work_1_value = 1.0 if team_work_1_choice == 0 else 0.0
@@ -287,28 +287,28 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
     register_user_form.divider()
 
     team_work_2_choice = UIUtil_UserResponse(question="Would you alert your manager when you are not confident in "
-                                                      "fixing a critical problem in the required time ?",
+                                                      "fixing a critical problem in the required time?",
                                              classtype=register_user_form.radio,
-                                             options=['Yes', 'I would try to push as much as possible myself first.'])
+                                             options=['Yes', 'I would try first as much as possible myself'])
     team_work_2_value = 1.0 if team_work_2_choice == 0 else 0.0
 
     register_user_form.divider()
 
     team_work_3_choice = UIUtil_UserResponse(question="Would you escalate a problem to another group or "
-                                                      "problem when it is not your competence?",
+                                                      "expert colleague when it is not your competence?",
                                              classtype=register_user_form.radio,
-                                             options=['Yes', 'I would try to push as much as possible myself first.'])
+                                             options=['Yes', 'I would try first as much as possible myself.'])
     team_work_3_value = 1.0 if team_work_3_choice == 0 else 0.0
 
     register_user_form.divider()
 
     user.team_work_tech_value = (team_work_1_value + team_work_2_value + team_work_3_value) / 3
 
-    ###########################   FOLLNESS TEST ##################
+    ###########################   Easy to fool TEST ##################
 
     fulled_phishing_choice = UIUtil_UserResponse(question="Would you open an external link or program in "
-                                                          "an email from colleagues, friends, family ? "
-                                                          "(Hidden: how easy is to be fulled)",
+                                                          "an email from colleagues, friends, or family? "
+                                                          "(Hidden: how easy is to be fooled)",
                                                  classtype=register_user_form.selectbox,
                                                  options=['I do not know', 'No', 'Maybe'])
     fulled_phishing_value = 1.0
@@ -319,9 +319,8 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
 
     register_user_form.divider()
 
-    fulled_externaldevices_choice = UIUtil_UserResponse(question="Would you bring a USB stick to company's provided "
-                                                                 "for your personal things or being asked by a "
-                                                                 "colleague?",
+    fulled_externaldevices_choice = UIUtil_UserResponse(question="Would you plug in a personal USB stick in a company's  "
+                                                                 "computer or when asked by a colleague?",
                                                         classtype=register_user_form.selectbox,
                                                         options=['No', 'I do not know', 'Maybe'])
     fulled_externaldevices_value = 1.0
@@ -333,8 +332,8 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
     register_user_form.divider()
 
     sharing_choice = UIUtil_UserResponse(
-        question="Would you share internal network security or infrastructure with friends, family "
-                 "or other people that should not be aware of?",
+        question="Would you share internal network security or infrastructure info with friends,"
+                 "family, or other people who should not be aware of?",
         classtype=register_user_form.radio,
         options=['No', 'I do not know', 'Maybe'])
 
@@ -383,7 +382,7 @@ def register_user_preferences(form_name: str, location: str = 'main') -> bool:
         else Preference_Politely.FORMAL_PRESENTATION
 
     avatarsList = ["data/characters/boy.gif", "data/characters/dog.gif", "data/characters/None.png"]
-    img = image_select("Select which avatar you would like, or last if you don't want one.", avatarsList)
+    img = image_select("Select which avatar you would like  between the first two, or the last if you don't want one.", avatarsList)
     user.avatar_choice = img
 
     if register_user_form.form_submit_button('Next'):
