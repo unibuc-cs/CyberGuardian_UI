@@ -3,6 +3,7 @@ import streamlit as st
 import databaseUtils
 from userUtils import SecurityOfficer
 from userUtils import SecurityOfficer
+import userUtils
 from databaseUtils import CredentialsDB
 import pandas as pd
 from typing import Union
@@ -96,6 +97,7 @@ def register_credentials(newUser: SecurityOfficer):
 def isValidNewUsername(new_username: str) -> bool:
     return not g_credentialsDB.userExists(new_username)
 
+
 def showLoggedUserSidebar():
     assert logged_in(), "Not logged in"
     user: SecurityOfficer = getCurrentUser()
@@ -105,3 +107,14 @@ def showLoggedUserSidebar():
 
     if st.sidebar.button("Logout"):
         logout()
+
+    st.sidebar.write("Some hidden data normally..:")
+    st.sidebar.write(f"Expertise declared: {userUtils.getUserExpertiseStr(user.expertise)}")
+    st.sidebar.write(f"Tech eval individual score: {user.technical_responses_eval}")
+    st.sidebar.write(f"Tech eval in team score: {user.team_work_tech_value}")
+    st.sidebar.write(f"How easy you can be tricked: {min(1.0, user.can_be_tricked_out_factor)}")
+    st.sidebar.write(f"Teamwork {user.correct_teamwork}")
+    st.sidebar.write(f"How likely you may cause intentional damage: {user.intentional_damage_factor}")
+    st.sidebar.write(f"Your motivation factor: {user.motivation_factor}")
+
+

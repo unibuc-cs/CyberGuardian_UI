@@ -7,6 +7,7 @@ from streamlit_feedback import streamlit_feedback
 from pathlib import Path
 from datetime import datetime
 import json
+import base64
 
 if csu.option_use_trubrics:
     from trubrics.integrations.streamlit import FeedbackCollector
@@ -34,6 +35,16 @@ temperature = None
 top_p = None
 max_length = None
 llm = None
+
+file_ = open("data/characters/dog.gif", "rb")
+contents = file_.read()
+data_url = base64.b64encode(contents).decode("utf-8")
+file_.close()
+
+st.sidebar.markdown(
+    f'<img src="data:image/gif;base64,{data_url}" width="200" height="200" style="opacity:0.4;filter:alpha(opacity=40);" alt="cat gif">',
+    unsafe_allow_html=True,
+)
 
 def clear_chat_history():
     st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
@@ -211,3 +222,4 @@ if st.session_state.messages[-1]["role"] != "assistant":
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
     st.rerun()
+

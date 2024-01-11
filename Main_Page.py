@@ -20,7 +20,6 @@ st.write("# Welcome to Dynabic demo from University of Bucharest!")
 st.image("ubsigla.jpg", width=200)
 st.sidebar.success("Select a functionality above.")
 
-
 def logout(button_name: str, location: str = 'main', key: str = None)->True:
     """
     Creates a logout button.
@@ -59,3 +58,4 @@ else:
     placeholder = st.empty()
     placeholder2 = st.empty()
     placeholder3.write(f'### Please login !')
+

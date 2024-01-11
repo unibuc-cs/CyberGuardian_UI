@@ -136,6 +136,9 @@ st.write("A: bla bla...")
 st.write("H: Ok, to solve temporarily before rewrite the firmwares can you block the identified top IPs "
          "sending GET commands by adding them to the firewall csv then commit it on Github?")
 
+
+st.write("H: TODO 	- User ask to compare one of the devices to find differences between a normal device "
+         "and a hacked one. => Need DATABASE_STOCK_PROCESSES and DATABASE_ID_PROCESSES. Restock the OS. [PYTHON program]")
 exit(0)
 ############
 

@@ -5,3 +5,4 @@ validators
 streamlit-extras
 streamlit-feedback
 trubrics
+streamlit_image_select
