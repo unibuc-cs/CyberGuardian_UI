@@ -8,6 +8,16 @@ from databaseUtils import CredentialsDB
 import pandas as pd
 from typing import Union
 
+RELATIVE_PATH_TO_LOCAL_LLM_TRAINED = "../dynabicChatbot"
+
+import sys
+import os
+sys.path.append(RELATIVE_PATH_TO_LOCAL_LLM_TRAINED)
+
+import QuestionAndAnswerUtils
+from QuestionAndAnswerUtils import *
+
+
 # Which platform for feedback retention, either trubrics or manual processing
 option_use_trubrics = True
 
@@ -37,6 +47,30 @@ def getFeedbackCollector() -> Union[FeedbackCollector, None]:
 #####
 
 g_credentialsDB: CredentialsDB = None
+
+g_securityChatBotLocal = None
+
+def getLocalChatBotModelInstance():
+    global g_securityChatBotLocal
+    if g_securityChatBotLocal is None:
+
+        # Need to change the directory then revert back since ther model needs to load some vector data for RAG stored locally
+        # but relative to the model's path!
+        import os
+        cwd = os.getcwd()
+        os.chdir(RELATIVE_PATH_TO_LOCAL_LLM_TRAINED)
+
+        g_securityChatBotLocal = QuestionAndAnsweringCustomLlama2(
+            QuestionRewritingPrompt=QuestionAndAnsweringCustomLlama2.QUESTION_REWRITING_TYPE.QUESTION_REWRITING_DEFAULT,
+            QuestionAnsweringPrompt=QuestionAndAnsweringCustomLlama2.SECURITY_PROMPT_TYPE.PROMPT_TYPE_SECURITY_OFFICER_WITH_RAG_MEMORY_NOSOURCES,
+            ModelType=QuestionAndAnsweringCustomLlama2.LLAMA2_VERSION_TYPE.LLAMA2_7B_chat,
+            debug=True, streamingOnAnotherThread=True, demoMode=False)
+
+        # Changing back here
+        os.chdir(cwd)
+
+    return g_securityChatBotLocal
+
 
 def logged_in() -> bool:
     if g_credentialsDB is None:

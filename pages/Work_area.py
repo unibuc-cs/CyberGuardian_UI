@@ -8,6 +8,9 @@ from pathlib import Path
 from datetime import datetime
 import json
 import base64
+import importlib
+from streamlit_extras.stylable_container import stylable_container
+
 
 if csu.option_use_trubrics:
     from trubrics.integrations.streamlit import FeedbackCollector
@@ -15,9 +18,14 @@ if csu.option_use_trubrics:
 # This is a paid-like service to capture metrics, very good but restricted...
 # We implemented both variants
 
-replicate_api = None
 
-debug = 0
+USE_BASE_CLOUD_MODEL = False
+LOCAL_CHATBOT_MODEL = csu.getLocalChatBotModelInstance() if USE_BASE_CLOUD_MODEL is False else None
+replicate_api = None
+showREPLICATE_details = False
+
+debug = 1
+debug_model = 0
 if debug==0: # Require signin if not logged in
     if not csu.logged_in():
         st.warning("You need to login")
@@ -27,7 +35,8 @@ if debug==0: # Require signin if not logged in
 
 #######################################
 
-import replicate
+if USE_BASE_CLOUD_MODEL:
+    import replicate
 import os
 
 # Parameter models
@@ -58,7 +67,9 @@ def save_current_history():
             json.dump(st.session_state.messages, write)
 
 # Function for generating LLaMA2 response.
-def generate_llama2_response(prompt_input):
+
+
+def generate_llama2_response_baseversion(prompt_input: str):
     string_dialogue = "You are a helpful assistant. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
     for dict_message in st.session_state.messages:
         if dict_message["role"] == "user":
@@ -72,9 +83,20 @@ def generate_llama2_response(prompt_input):
                                   "temperature":temperature, "top_p":top_p, "max_length":max_length, "repetition_penalty":1})
     return output
 
+def generate_llama2_response_dynabicModel(prompt_input: str):
+    response = LOCAL_CHATBOT_MODEL.ask_question(prompt_input)
+    return response
+
+# TODO in the next versions:
+def parseFunctionCalling(output: str):
+    if "st.write" in output:
+        st.write("YES")
+
+
 def setup_model_and_keys():
     global replicate_api
     global temperature, top_p, max_length, llm
+    global showREPLICATE_details
 
     # Setup the model and parameters controllers
     with st.sidebar:
@@ -84,34 +106,42 @@ def setup_model_and_keys():
         st.button('Clear Chat History', on_click=clear_chat_history)
         st.button('Save Chat', on_click=save_current_history)
 
-        if debug==0:
-            if 'REPLICATE_API_TOKEN' in st.secrets:
-                st.success('API key already provided!', icon='✅')
-                replicate_api = st.secrets['REPLICATE_API_TOKEN']
-            else:
-                replicate_api = st.text_input('Enter Replicate API token:', type='password')
-                if not (replicate_api.startswith('r8_') and len(replicate_api)==40):
-                    st.warning('Please enter your credentials!', icon='⚠️')
+        if USE_BASE_CLOUD_MODEL:
+            if debug_model == 0 or USE_BASE_CLOUD_MODEL is False:
+                if 'REPLICATE_API_TOKEN' in st.secrets:
+                    if showREPLICATE_details:
+                        st.success('API key already provided!', icon='✅')
+
+                    replicate_api = st.secrets['REPLICATE_API_TOKEN']
                 else:
-                    st.success('Proceed to entering your prompt message!', icon='👉')
+                    replicate_api = st.text_input('Enter Replicate API token:', type='password')
+                    if not (replicate_api.startswith('r8_') and len(replicate_api)==40):
+                        st.warning('Please enter your credentials!', icon='⚠️')
+                    else:
+                        st.success('Proceed to entering your prompt message!', icon='👉')
 
 
-        else:
-            replicate_api = "not_needed"
+            else:
+                replicate_api = "not_needed"
 
-        os.environ['REPLICATE_API_TOKEN'] = replicate_api
+            os.environ['REPLICATE_API_TOKEN'] = replicate_api
 
-        st.subheader('Models and parameters')
-        selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B'], key='selected_model')
-        if selected_model == 'Llama2-7B':
-            llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
-        elif selected_model == 'Llama2-13B':
-            llm = 'a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5'
+            if showREPLICATE_details:
+                st.subheader('Models and parameters')
+                selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B'], key='selected_model')
+                if selected_model == 'Llama2-7B':
+                    llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
+                elif selected_model == 'Llama2-13B':
+                    llm = 'a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5'
 
-        temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
-        top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
-        max_length = st.sidebar.slider('max_length', min_value=32, max_value=4096, value=4096, step=8)
-
+                temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
+                top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
+                max_length = st.sidebar.slider('max_length', min_value=32, max_value=4096, value=4096, step=8)
+            else:
+                llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
+                temperature = 0.1
+                top_p = value=0.95
+                max_length = 4096
 
 def initialize_work_area():
     setup_model_and_keys()
@@ -166,6 +196,40 @@ def display_feedback(feedback_key: str, use_emojis: bool, user: userUtils.Securi
 
     return res
 
+
+#Parse any function call in the response and returns True if that's the case otherwise return True
+def solveFunctionCalls(full_response: str) -> bool:
+    if 'FUNC_CALL' not in full_response:
+        return False
+
+    # Identify which function call it is being asked
+    # TODO: allow user to inject his own tools
+    # TODO: make exception and fail method
+    # Parse the parameters in function call
+    words_in_func_call = list(full_response.split())
+    words_in_func_call = [w.strip() for w in words_in_func_call]
+    assert words_in_func_call[0] == 'FUNC_CALL', "First argument should be FUNC_CALL token"
+    assert words_in_func_call[2] == 'Params', "Third argument needs to be Params token"
+    assert "</s>" in words_in_func_call[-1]
+    words_in_func_call[-1] = words_in_func_call[-1].replace("</s>", "")
+
+    # Remove double quotes stuff
+    words_in_func_call = [w if w[0] not in ["'", '"'] else w[1:len(w)-1]   for w in words_in_func_call]
+
+    # Second expected as module.func
+    mod_name, func_name = words_in_func_call[1].rsplit('.', 1)
+    func_params = words_in_func_call[3:]
+
+    # import the module where function is
+    mod = importlib.import_module(mod_name)
+
+    # Get the function
+    func = getattr(mod, func_name)
+
+    # Call it
+    result = func(*func_params)
+
+
 def display_chat_history():
     # Display or clear chat messages
 
@@ -183,6 +247,10 @@ def display_chat_history():
     for n, message in enumerate(st.session_state.messages):
         with st.chat_message(message["role"]):
             st.write(message["content"])
+            if message["role"] == "assistant":
+                res = solveFunctionCalls(message["content"])
+
+
 
         if currentUser.feedbackArea == userUtils.Preference_FeedbackArea.ALLOW_FEEDBACK_ON_HISTORY:
             if message["role"] == "assistant" and n > 1:
@@ -196,14 +264,17 @@ def display_chat_history():
                 feedback_key = f"feedback_{int(n / 2)}"
                 display_feedback(feedback_key, use_emojis, currentUser)
 
-
 ################### ACtive rendering code
 initialize_work_area()
 display_chat_history()
 
 
+
+llama2_response_func = generate_llama2_response_baseversion if USE_BASE_CLOUD_MODEL is True else\
+                        generate_llama2_response_dynabicModel
+
 # User-provided prompt
-if prompt := st.chat_input(disabled=not replicate_api):
+if prompt := st.chat_input(disabled=not replicate_api and LOCAL_CHATBOT_MODEL is None):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.write(prompt)
@@ -212,14 +283,16 @@ if prompt := st.chat_input(disabled=not replicate_api):
 if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = generate_llama2_response(prompt) if debug == 0 else "dummy debug response"
+            response = llama2_response_func(prompt) if debug_model == 0 else "dummy debug response"
             placeholder = st.empty()
             full_response = ''
+
             for item in response:
                 full_response += item
                 placeholder.markdown(full_response)
+            res = solveFunctionCalls(full_response)
+            #if res is False:
             placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
     st.rerun()
-
