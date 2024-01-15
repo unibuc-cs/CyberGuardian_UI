@@ -84,8 +84,8 @@ def shopComparativeColumnsDatasets(dataFrame: Union[str, pd.DataFrame], other: U
 
 
 if __name__ == '__main__':
-    st.write("H: Give me a map of messages by used data and regions, comparing the current data and a known snapshot ")
+    st.write("H: Give me a world map of requests by comparing the current data and a known snapshot with bars")
 
-    st.write("A:Here are the data. First is the now version")
+    st.write("A:Here is the map, first is the now version, I will invoke FUNC_CALL shopComparativeColumnsDatasets with Params '../../dynabicChatbot/DATASET_LOGS_HACKED_True.csv' '../../dynabicChatbot/DATASET_LOGS_HACKED_False.csv'")
 
     shopComparativeColumnsDatasets("../../dynabicChatbot/DATASET_LOGS_HACKED_True.csv", "../../dynabicChatbot/DATASET_LOGS_HACKED_False.csv")

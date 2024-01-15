@@ -29,7 +29,7 @@ showResourceUtilizationComparison("../dynabicChatbot/data/SmartHome_DDoSSnapshot
 
 
 st.write(
-    "H: Show me the devices grouped by IP which have more than 25% requests over the median of a normal session per. Sort them by count")
+    "H: Show me the logs of the devices grouped by IP which have more than 25% requests over the median of a normal session per. Sort them by count")
 st.write("A: Here it is")
 
 show_outlier_ips_usage("../dynabicChatbot/data/SmartHome_DDoSSnapshot/DATASET_LOGS_HACKED_False.csv",
@@ -41,7 +41,7 @@ M = 3
 N = 10
 st.write(f"H: show a sample of GET requests from the top {M} demanding IPs, including their start time, end time, ")
 st.write("A: Here it is")
-showLastNGetQueriesFromTopM_demandingIPs("../dynabicChatbot/data/SmartHome_DDoSSnapshot/DATASET_LOGS_HACKED_True.csv", N=N, M=M)
+showLastNGetQueriesFromTopM_demandingIPs(N=N, M=M, "../dynabicChatbot/data/SmartHome_DDoSSnapshot/DATASET_LOGS_HACKED_True.csv")
 
 st.write("H: What could it mean if there are many IPs sending GET commands in a short time with random Queries ")
 st.write("A: This could be the sign of a DDoS attack")

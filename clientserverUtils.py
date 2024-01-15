@@ -7,6 +7,7 @@ import userUtils
 from databaseUtils import CredentialsDB
 import pandas as pd
 from typing import Union
+from timeit import default_timer
 
 RELATIVE_PATH_TO_LOCAL_LLM_TRAINED = "../dynabicChatbot"
 
@@ -29,6 +30,27 @@ option_saveFeedbackAsJSON: bool = True
 
 # The maximum number of responses to hold when saving a feedback. 4 means last 2 for user 2 for AI
 option_conversation_context_to_save_len: int = 4
+
+TRIGGER_TIMER_STARTED_TIME = None
+TRIGGER_TIMER_ENDED_TIME = None
+TIME_UNTIL_TRIGGER_TIMER = 2.0 # 2 seconds
+
+def startDemoTrigger():
+    global TRIGGER_TIMER_STARTED_TIME
+    global TRIGGER_TIMER_ENDED_TIME
+
+    TRIGGER_TIMER_STARTED_TIME = default_timer()
+    TRIGGER_TIMER_ENDED_TIME = default_timer() + TIME_UNTIL_TRIGGER_TIMER
+
+def isTriggered(cancel_trigger:bool)->bool:
+    global TRIGGER_TIMER_STARTED_TIME
+    global TRIGGER_TIMER_ENDED_TIME
+
+    if TRIGGER_TIMER_ENDED_TIME is None or TRIGGER_TIMER_STARTED_TIME is None:
+        return False
+    res = (default_timer() > TRIGGER_TIMER_ENDED_TIME)
+    if res and cancel_trigger:
+        TRIGGER_TIMER_STARTED_TIME = TRIGGER_TIMER_ENDED_TIME = None
 
 def getFeedbackCollector() -> Union[FeedbackCollector, None]:
     global g_feedbackCollector
@@ -64,7 +86,7 @@ def getLocalChatBotModelInstance():
             QuestionRewritingPrompt=QuestionAndAnsweringCustomLlama2.QUESTION_REWRITING_TYPE.QUESTION_REWRITING_DEFAULT,
             QuestionAnsweringPrompt=QuestionAndAnsweringCustomLlama2.SECURITY_PROMPT_TYPE.PROMPT_TYPE_SECURITY_OFFICER_WITH_RAG_MEMORY_NOSOURCES,
             ModelType=QuestionAndAnsweringCustomLlama2.LLAMA2_VERSION_TYPE.LLAMA2_7B_chat,
-            debug=True, streamingOnAnotherThread=True, demoMode=False)
+            debug=False, streamingOnAnotherThread=True, demoMode=False)
 
         # Changing back here
         os.chdir(cwd)

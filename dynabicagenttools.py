@@ -14,6 +14,7 @@ import os
 # from random import random
 import random
 
+@st.cache_data
 def show_outlier_ips_usage(normaldataset: Union[str, pd.DataFrame], outlierdataset: Union[str, pd.DataFrame]) -> None:
     interested_columns = ['ip', 'id', 'lat', 'lon']
     # Create counts per usage and median values
@@ -50,10 +51,9 @@ def show_outlier_ips_usage(normaldataset: Union[str, pd.DataFrame], outlierdatas
 ############
 @st.cache_data
 def showResourceUtilizationComparison(nonHackedPath: str, hackedPath: str):
-    df = pd.read_csv(nonHackedPath)
-
     test = True
     if not test:
+        df = pd.read_csv(nonHackedPath)
         st.line_chart(
             df, x="time", y=["dataretrieval_occupancy", "dataupdater_occupancy"], yscale=1.0,
             color=["#FF000080", "#0000FF80"]  # Optional
@@ -83,18 +83,26 @@ def showResourceUtilizationComparison(nonHackedPath: str, hackedPath: str):
                    bins=[0.2, 0.4, 0.6, 0.8, 1.0], alpha=0.85, color=['green', 'yellow'],
                    label=['Retrievers occupancy', 'Updaters occupancy'])
         ax[1].legend()
-        ax[1].set_title("Outlier occupancy")
+        ax[1].set_title("Current occupancy")
 
         st.pyplot(fig)
 
-
-def showLastNGetQueriesFromTopM_demandingIPs(dataset: Union[pd.DataFrame, str], N: int = 10, M: int = 3) -> None:
+@st.cache_data
+def showLastNGetQueriesFromTopM_demandingIPs(M: int = 3, N: int = 10, dataset: Union[pd.DataFrame, str] = None) -> None:
     interested_columns = ['ip', 'id', 'lat', 'lon']
+    if type(M) is str:
+        M = int(M)
+    if type(N) is str:
+        N = int(N)
+
+    if dataset is None:
+        dataset = "../dynabicChatbot/data/SmartHome_DDoSSnapshot/DATASET_LOGS_HACKED_True.csv"
+
     df = pd.read_csv(dataset) if isinstance(dataset, str) else dataset
     df_grouped = df.groupby(interested_columns, as_index=False).agg(count=("ip", "count"))
     df_grouped.sort_values(by='count', ascending=False, inplace=True)
 
-    topDemandingIPs = set(df_grouped['ip'][:3].to_dict().values())
+    topDemandingIPs = set(df_grouped['ip'][:M].to_dict().values())
 
     mask = np.where(df['ip'].isin(topDemandingIPs) & df['request_type'].isin([2]))
     st.write(df.loc[mask][['ip', 'request_type', 'start_t', 'end_t', 'request_params']][-N:])
