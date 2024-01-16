@@ -43,7 +43,7 @@ st.write(f"H: show a sample of GET requests from the top {M} demanding IPs, incl
 st.write("A: Here it is")
 showLastNGetQueriesFromTopM_demandingIPs(N=N, M=M, "../dynabicChatbot/data/SmartHome_DDoSSnapshot/DATASET_LOGS_HACKED_True.csv")
 
-st.write("H: What could it mean if there are many IPs sending GET commands in a short time with random Queries ")
+st.write("H: What could it mean if there are many IPs from different locations sending GET commands in a short time with random queries ?")
 st.write("A: This could be the sign of a DDoS attack")
 
 st.write("H: What can I do about it ? ")

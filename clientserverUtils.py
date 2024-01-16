@@ -51,6 +51,7 @@ def isTriggered(cancel_trigger:bool)->bool:
     res = (default_timer() > TRIGGER_TIMER_ENDED_TIME)
     if res and cancel_trigger:
         TRIGGER_TIMER_STARTED_TIME = TRIGGER_TIMER_ENDED_TIME = None
+    return True
 
 def getFeedbackCollector() -> Union[FeedbackCollector, None]:
     global g_feedbackCollector

@@ -1,4 +1,5 @@
 import random
+import time
 
 import clientserverUtils as csu
 import userUtils
@@ -19,12 +20,12 @@ if csu.option_use_trubrics:
 # We implemented both variants
 
 
-USE_BASE_CLOUD_MODEL = False
+USE_BASE_CLOUD_MODEL = True
 LOCAL_CHATBOT_MODEL = csu.getLocalChatBotModelInstance() if USE_BASE_CLOUD_MODEL is False else None
 replicate_api = None
 showREPLICATE_details = False
 
-debug = 1
+debug = 0
 debug_model = 0
 if debug == 0:  # Require signin if not logged in
     if not csu.logged_in():
@@ -33,7 +34,8 @@ if debug == 0:  # Require signin if not logged in
 
     csu.showLoggedUserSidebar()
 
-DEMO_MODE = True
+DEMO_MODE = (USE_BASE_CLOUD_MODEL is False) and True # If to implement the DdoS trigger stuff
+DEMO_MODE_SCRIPT = True # If true, the script will be run without user input
 
 #######################################
 
@@ -153,14 +155,16 @@ def setup_model_and_keys():
                 max_length = 4096
 
 
-g_DemoTimer: threading.Timer = None
-
+FIRST_TIME_DEMOTIMER_CREATION = False
+if 'g_DemoTimer' not in st.session_state:
+    st.session_state.g_DemoTimer: threading.Timer = None
+    FIRST_TIME_DEMOTIMER_CREATION = True
+    st.session_state.DEMO_MODE_TRIGGERED = False
 
 def check_triggers():
-    global g_DemoTimer
-    if csu.isTriggered(cancel_triggers=False):
-        g_DemoTimer.cancel()
-        st.rerun()
+    if csu.isTriggered(cancel_trigger=False):
+        if 'g_DemoTimer' in st.session_state:
+            st.session_state.g_DemoTimer.cancel()
 
 def initialize_work_area():
     setup_model_and_keys()
@@ -170,12 +174,12 @@ def initialize_work_area():
         st.session_state.messages = [{"role": "assistant",
                                       "content": "Hi! I will let you know when a problem appears. Meantime you can ask me anything"}]
 
-        if DEMO_MODE:
-            csu.startDemoTrigger()
+    if DEMO_MODE and FIRST_TIME_DEMOTIMER_CREATION:
+        csu.startDemoTrigger()
 
-            # Use another thread but for now...
-            global g_DemoTimer
-            threading.Timer(1.0, check_triggers)
+        # Use another thread but for now...
+        st.session_state.g_DemoTimer = threading.Timer(1.0, check_triggers)
+        st.session_state.g_DemoTimer.start()
 
 
 def _submit_feedback(user_response, emoji=None):
@@ -262,6 +266,47 @@ def display_chat_history():
                 feedback_key = f"feedback_{int(n / 2)}"
                 display_feedback(feedback_key, use_emojis, currentUser)
 
+from schedule import every, repeat, run_pending
+
+def doDemoScript():
+    if st.session_state.DEMO_MODE_STEP == 1:
+        st.session_state.messages.append({"role": "user",
+                                          "content": "Ok. I'm on it, can you show me a resource utilization graph comparison between a normal session and current situation"})
+        st.session_state.DEMO_MODE_STEP += 1
+        time.sleep(3)
+        st.rerun()
+    elif st.session_state.DEMO_MODE_STEP == 2:
+        st.session_state.messages.append({"role": "user",
+                                          "content": "Show me the logs of the devices grouped by IP which have more than 25% requests over the median of a normal session per. Sort them by count"})
+        st.session_state.DEMO_MODE_STEP += 1
+        time.sleep(3)
+        st.rerun()
+    elif st.session_state.DEMO_MODE_STEP == 3:
+        st.session_state.messages.append({"role": "user",
+                                          "content": "Can you show a sample of GET requests from the top 3 demanding IPs, including their start time, end time? Only show the last 10 logs."})
+        st.session_state.DEMO_MODE_STEP += 1
+        time.sleep(3)
+        st.rerun()
+    elif st.session_state.DEMO_MODE_STEP == 4:
+        st.session_state.messages.append({"role": "user",
+                                          "content": "Give me a world map of requests by comparing the current data and a known snapshot with bars"})
+        st.session_state.DEMO_MODE_STEP += 1
+        time.sleep(3)
+        st.rerun()
+    elif st.session_state.DEMO_MODE_STEP == 5:
+        st.session_state.messages.append({"role": "user",
+                                          "content": "What could it mean if there are many IPs from different locations sending GET commands in a short time with random queries ?"})
+        st.session_state.DEMO_MODE_STEP += 1
+        time.sleep(3)
+        st.rerun()
+    elif st.session_state.DEMO_MODE_STEP == 6:
+        st.session_state.messages.append({"role": "user",
+                                          "content": "Generate me a python code to insert in a pandas dataframe named Firewalls a new IP 10.20.30.40 as blocked under the name of IoTDevice"})
+        st.session_state.DEMO_MODE_STEP += 1
+        time.sleep(3)
+        st.rerun()
+
+
 
 ################### ACtive rendering code
 initialize_work_area()
@@ -278,9 +323,14 @@ if prompt := st.chat_input(disabled=not replicate_api and LOCAL_CHATBOT_MODEL is
 
 # Generate a new response if last message is not from assistant
 need_to_ignore_standalone_question_chain = False
-if csu.isTriggered(cancel_trigger=True):
-    st.session_state.messages = [{"role": "assistant",
-                                  "content": "Alert: there seems to be many timeouts and 503 error codes on the IoT Hub. Please investigate! I can help you with this."}]
+if csu.isTriggered(cancel_trigger=True) and ('DEMO_MODE_TRIGGERED' not in st.session_state or st.session_state.DEMO_MODE_TRIGGERED is False):
+    st.session_state.messages.append({"role": "assistant",
+                                  "content": "Alert: there seems to be many timeouts and 503 error codes on the IoT Hub. Please investigate! I can help you with this."})
+
+    st.session_state.DEMO_MODE_TRIGGERED = True
+    st.session_state.DEMO_MODE_STEP = 1
+    st.rerun()
+
 elif st.session_state.messages[-1]["role"] != "assistant":
     # This is the case when the last run didn't succeed and a rerun was called
     if prompt is None:
@@ -312,13 +362,17 @@ elif st.session_state.messages[-1]["role"] != "assistant":
             # Parse a bit the response
             if not USE_BASE_CLOUD_MODEL:
                 res = LOCAL_CHATBOT_MODEL.solveFunctionCalls(full_response)
+                if DEMO_MODE and DEMO_MODE_SCRIPT:
+                    time.sleep(5)
             # if res is False:
             placeholder.markdown(full_response)
 
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
     st.rerun()
-elif DEMO_MODE is True:
-    st.session_state.messages.append({"role": "user",
-                                      "content": "Ok. I'm on it, can you show me a resource utilization graph comparison between a normal session and current situation"})
-    st.rerun()
+
+elif DEMO_MODE is True and st.session_state.DEMO_MODE_TRIGGERED:
+    doDemoScript()
+
+
+
