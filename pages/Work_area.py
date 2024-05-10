@@ -49,7 +49,7 @@ top_p = None
 max_length = None
 llm = None
 
-file_ = open("data/characters/dog.gif", "rb")
+file_ = open("data/characters/man.png", "rb")
 contents = file_.read()
 data_url = base64.b64encode(contents).decode("utf-8")
 file_.close()

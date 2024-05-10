@@ -66,12 +66,12 @@ def register_user_basic(form_name: str, location: str = 'main') -> bool:
         register_user_form = st.sidebar.form('Basic registration')
 
     register_user_form.subheader(form_name)
-    new_email = register_user_form.text_input('Email', value="ciprian.paduraru2009@gmail.com")
-    new_username = register_user_form.text_input('Username', value="paduraru2009").lower()
-    new_name = register_user_form.text_input('Name', value="Ciprian Paduraru")
-    new_password = register_user_form.text_input('Password', type='password', value="Arbori2009")
-    new_password_repeat = register_user_form.text_input('Repeat password', type='password', value="Arbori2009")
-    birthday = register_user_form.date_input("When's your birthday",
+    new_email = register_user_form.text_input('Email', value="")
+    new_username = register_user_form.text_input('Username', value="").lower()
+    new_name = register_user_form.text_input('Name', value="")
+    new_password = register_user_form.text_input('Password', type='password', value="")
+    new_password_repeat = register_user_form.text_input('Repeat password', type='password', value="")
+    birthday = register_user_form.date_input("Birthday",
                                              value=datetime.date(1986, 9, 3),
                                              max_value=datetime.date.today(),
                                              min_value=datetime.date(1900, 7, 6))
@@ -143,9 +143,11 @@ def register_user_behavioral(form_name: str, location: str = 'main') -> bool:
     # How likely is to attack from inside
     internalDamageChoice = UIUtil_UserResponse(
         question="Would you try to test the reliability of our production systems without a concrete task from your "
-                 "teamlead? (Hidden: this is the intentional damage factor thing)",
+                 "team lead? (Hidden: this is the intentional damage factor thing)",
         classtype=register_user_form.radio,
-        options=[":rainbow[Never]", "Just for fun or to test it a bit :movie_camera:", "***Maybe***"])
+        #options=[":rainbow[Never]", "Just for fun or to test it a bit :movie_camera:", "***Maybe***"]
+        options = ["Never", "Just for fun or to test it a bit", "Maybe"]
+    )
     if internalDamageChoice == 0:
         user.intentional_damage_factor = 0.0
     elif internalDamageChoice == 1:
@@ -177,16 +179,16 @@ def register_user_behavioral(form_name: str, location: str = 'main') -> bool:
     user.intentional_damage_factor = min(1.0, user.intentional_damage_factor + (convinceValue + convinceValue_2) * 0.5)
 
     user.correct_teamwork = register_user_form.slider(
-        "How likely is to report a collegue that brings in without authorization own software, "
-        "or causes intentional damage ? (Hidden: Correct teamwork factor)",
+        "How likely is to report a colleague who brings in without authorization their own software, "
+        "or causes intentional damage? (Hidden: Correct teamwork factor)",
         min_value=1, max_value=10, value=5, step=1) / 10.0
 
-    motivationValue = register_user_form.slider("How motivated are you with what you do daily"
-                                                " (Hidden : Motivation factor) ?",
+    motivationValue = register_user_form.slider("How motivated are you by your daily job?"
+                                                " (Hidden: Motivation factor)",
                                                 min_value=1, max_value=10, value=5, step=1) / 10.0
 
     confidenceChoise = UIUtil_UserResponse(classtype=register_user_form.selectbox,
-                                           question="How confident ar you on your job  (Hidden : Motivation factor) ?",
+                                           question="How confident are you on your job?  (Hidden: Motivation factor)",
                                            options=['Very confident', 'Somehow confident', 'Not confident'])
     confidenceValue = 1.0
     if confidenceChoise == 1:
@@ -219,15 +221,15 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
         register_user_form = st.sidebar.form('Technical evaluation')
 
     register_user_form.subheader(form_name)
-    csu.ShowTODO("TODO FMI: this will be an LLM-guided interview with questions based on an uploaded CV,"
-                 "previous answers and feedback. A dynamic interview with different threads of discussion. Stay tuned!")
+    csu.ShowTODO("TODO: an LLM-guided interview with questions based on an uploaded CV,"
+                 "previous answers and feedback. Or a dynamic interview with different threads of discussion.")
 
     user = getInProgressRegistrationUser()
 
     # Expertise evaluation
-    experienceChoice = UIUtil_UserResponse(question="How many years of expertise do you have in security domain?",
+    experienceChoice = UIUtil_UserResponse(question="How many years of expertise do you have in cybersecurity?",
                                            classtype=register_user_form.radio,
-                                           options=["1-3 years", "3-7 years", ">7 years"])
+                                           options=["1-3 years", "3-7 years", "more than 7 years"])
     user.expertise = SecurityOfficerExpertise.BEGINNER
     if experienceChoice == 1:
         user.expertise = SecurityOfficerExpertise.MIDDLE
@@ -239,9 +241,9 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
     ######################################### Tehnical questions ######################
 
     register_user_form.write('What is a phishing attack? Check all that apply')
-    option_1 = register_user_form.checkbox('An attempt to steal sensitive information, typically in the form of usernames, passwords, credit cards, bank account information or other important data in order to utilize or sell the stolen information.', key="11")
+    option_1 = register_user_form.checkbox('An attempt to steal sensitive information, typically in the form of usernames, passwords, credit cards, bank account information in order to utilize or sell the stolen information.', key="11")
     option_2 = register_user_form.checkbox('Using a program that records every keystroke made by a computer user', key="12")
-    option_3 = register_user_form.checkbox('Form of malware attack in which an attacker encrypts the user’s data, folders, or entire device until a ‘ransom’ fee is paid', key="13")
+    option_3 = register_user_form.checkbox('Form of a malware attack in which an attacker encrypts the user’s data, folders, or entire device until a ‘ransom’ fee is paid', key="13")
     option_4 = register_user_form.checkbox('A virus from a USB stick', key="14")
 
     tech_que_score_1 = 1.0 if option_1 is True and option_2 is False and option_3 is False and option_4 is False else 0.0
@@ -355,7 +357,7 @@ def register_user_preferences(form_name: str, location: str = 'main') -> bool:
     """
     Creates a register new user widget.
     """
-    csu.ShowTODO("TODO SSH: Will tune this set of questions")
+    csu.ShowTODO("TODO SSH: To tune this set of questions based on the profile")
 
     succeed = False
 
@@ -378,11 +380,11 @@ def register_user_preferences(form_name: str, location: str = 'main') -> bool:
         else Preference_Emojis.NO_EMOJIS
 
     user.politely = Preference_Politely.POLITE_PRESENTATION \
-        if register_user_form.toggle('Prefer chatbot polite presentations', True) is True \
+        if register_user_form.toggle('Use polite formulations', True) is True \
         else Preference_Politely.FORMAL_PRESENTATION
 
-    avatarsList = ["data/characters/boy.gif", "data/characters/dog.gif", "data/characters/None.png"]
-    img = image_select("Select which avatar you would like  between the first two, or the last if you don't want one.", avatarsList)
+    avatarsList = ["data/characters/woman.png", "data/characters/man.png", "data/characters/None.png"]
+    img = image_select("Select which avatar you would like between the first two, or the last if you don't want one.", avatarsList)
     user.avatar_choice = img
 
     if register_user_form.form_submit_button('Next'):

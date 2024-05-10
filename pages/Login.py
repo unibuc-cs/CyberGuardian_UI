@@ -44,8 +44,8 @@ if not csu.logged_in():
     succeed_to_login = False
     with placeholder.form(key="login-form"):
         #login(placeholder)
-        username = st.text_input('Username', value="paduraru2009").lower()
-        password = st.text_input('Password', type='password', value="Arbori2009")
+        username = st.text_input('Username', value="alin").lower()
+        password = st.text_input('Password', type='password', value="dynabic")
 
         if st.form_submit_button('Login'):
             if csu.tryLogin(username, password):
