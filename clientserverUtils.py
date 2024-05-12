@@ -86,8 +86,12 @@ def getLocalChatBotModelInstance():
         g_securityChatBotLocal = QuestionAndAnsweringCustomLlama3(
             QuestionRewritingPrompt=QuestionAndAnsweringCustomLlama3.QUESTION_REWRITING_TYPE.QUESTION_REWRITING_DEFAULT,
             QuestionAnsweringPrompt=QuestionAndAnsweringCustomLlama3.SECURITY_PROMPT_TYPE.PROMPT_TYPE_SECURITY_OFFICER_WITH_RAG_MEMORY_NOSOURCES,
-            ModelType=QuestionAndAnsweringCustomLlama3.LLAMA2_VERSION_TYPE.LLAMA3_8B_chat,
-            debug=False, streamingOnAnotherThread=True, demoMode=False)
+            ModelType=QuestionAndAnsweringCustomLlama3.LLAMA3_VERSION_TYPE.LLAMA3_8B,
+            debug=False,
+            streamingOnAnotherThread=True,
+            demoMode=False,
+            noInitialize=False,
+            generation_params=QuestionAndAnsweringCustomLlama3.generation_params_greedy)
 
         # Changing back here
         os.chdir(cwd)

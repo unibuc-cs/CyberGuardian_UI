@@ -92,8 +92,8 @@ def generate_cloud_llm_response_baseversion(prompt_input: str):
     return output, False
 
 
-def generate_local_llm_response_dynabicModel(prompt_input: str):
-    response, isfullConversationalType = LOCAL_CHATBOT_MODEL.ask_question(prompt_input)
+def generate_local_llm_response_dynabicModel(prompt_input: str, add_to_history: True):
+    response, isfullConversationalType = LOCAL_CHATBOT_MODEL.ask_question(prompt_input, add_to_history=add_to_history)
     return response, isfullConversationalType
 
 
@@ -343,8 +343,9 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                 # and after that produces the output to the question
                 need_to_ignore_standalone_question_chain = LOCAL_CHATBOT_MODEL.hasHistoryMessages()
 
+            # TODO: fix second param to work for python code too!
             response, isfullConversationalType = llm_response_func(
-                prompt) if debug_model == 0 else "dummy debug response"
+                prompt, add_to_history=False) if debug_model == 0 else "dummy debug response"
             if not isfullConversationalType:
                 need_to_ignore_standalone_question_chain = False
             placeholder = st.empty()
