@@ -83,10 +83,10 @@ def getLocalChatBotModelInstance():
         cwd = os.getcwd()
         os.chdir(RELATIVE_PATH_TO_LOCAL_LLM_TRAINED)
 
-        g_securityChatBotLocal = QuestionAndAnsweringCustomLlama2(
-            QuestionRewritingPrompt=QuestionAndAnsweringCustomLlama2.QUESTION_REWRITING_TYPE.QUESTION_REWRITING_DEFAULT,
-            QuestionAnsweringPrompt=QuestionAndAnsweringCustomLlama2.SECURITY_PROMPT_TYPE.PROMPT_TYPE_SECURITY_OFFICER_WITH_RAG_MEMORY_NOSOURCES,
-            ModelType=QuestionAndAnsweringCustomLlama2.LLAMA2_VERSION_TYPE.LLAMA2_7B_chat,
+        g_securityChatBotLocal = QuestionAndAnsweringCustomLlama3(
+            QuestionRewritingPrompt=QuestionAndAnsweringCustomLlama3.QUESTION_REWRITING_TYPE.QUESTION_REWRITING_DEFAULT,
+            QuestionAnsweringPrompt=QuestionAndAnsweringCustomLlama3.SECURITY_PROMPT_TYPE.PROMPT_TYPE_SECURITY_OFFICER_WITH_RAG_MEMORY_NOSOURCES,
+            ModelType=QuestionAndAnsweringCustomLlama3.LLAMA2_VERSION_TYPE.LLAMA3_8B_chat,
             debug=False, streamingOnAnotherThread=True, demoMode=False)
 
         # Changing back here

@@ -20,7 +20,7 @@ if csu.option_use_trubrics:
 # We implemented both variants
 
 
-USE_BASE_CLOUD_MODEL = True
+USE_BASE_CLOUD_MODEL = False
 LOCAL_CHATBOT_MODEL = csu.getLocalChatBotModelInstance() if USE_BASE_CLOUD_MODEL is False else None
 replicate_api = None
 showREPLICATE_details = False
@@ -73,10 +73,10 @@ def save_current_history():
             json.dump(st.session_state.messages, write)
 
 
-# Function for generating LLaMA2 response.
+# Function for generating llm response.
 
 
-def generate_llama2_response_baseversion(prompt_input: str):
+def generate_cloud_llm_response_baseversion(prompt_input: str):
     string_dialogue = "You are a helpful assistant. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
     for dict_message in st.session_state.messages:
         if dict_message["role"] == "user":
@@ -92,7 +92,7 @@ def generate_llama2_response_baseversion(prompt_input: str):
     return output, False
 
 
-def generate_llama2_response_dynabicModel(prompt_input: str):
+def generate_local_llm_response_dynabicModel(prompt_input: str):
     response, isfullConversationalType = LOCAL_CHATBOT_MODEL.ask_question(prompt_input)
     return response, isfullConversationalType
 
@@ -138,18 +138,18 @@ def setup_model_and_keys():
 
             if showREPLICATE_details:
                 st.subheader('Models and parameters')
-                selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B'],
+                selected_model = st.sidebar.selectbox('Choose a Llama3 model', ['Llama3-8B', 'Llama3-70B'],
                                                       key='selected_model')
-                if selected_model == 'Llama2-7B':
-                    llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
-                elif selected_model == 'Llama2-13B':
-                    llm = 'a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5'
+                if selected_model == 'Llama3-8B':
+                    llm = 'meta/meta-llama-3-8b'
+                elif selected_model == 'Llama3-70B':
+                    llm = 'meta/meta-llama-3-70b'
 
                 temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
                 top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
                 max_length = st.sidebar.slider('max_length', min_value=32, max_value=4096, value=4096, step=8)
             else:
-                llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
+                llm = 'meta/meta-llama-3-8b'
                 temperature = 0.1
                 top_p = value = 0.95
                 max_length = 4096
@@ -208,7 +208,7 @@ def display_feedback(feedback_key: str, use_emojis: bool, user: userUtils.Securi
         res = csu.getFeedbackCollector().st_feedback(
             component="WorkArea",
             feedback_type="faces",
-            model="llama2_slightlyfinetuned",
+            model="llama3_slightlyfinetuned",
             prompt_id=None,  # see prompts to log prompts and model generations
             open_feedback_label="If you are kind, please provide extra information",
             key=feedback_key,
@@ -312,8 +312,8 @@ def doDemoScript():
 initialize_work_area()
 display_chat_history()
 
-llama2_response_func = generate_llama2_response_baseversion if USE_BASE_CLOUD_MODEL is True else \
-    generate_llama2_response_dynabicModel
+llm_response_func = generate_cloud_llm_response_baseversion if USE_BASE_CLOUD_MODEL is True else \
+    generate_local_llm_response_dynabicModel
 
 # User-provided prompt
 if prompt := st.chat_input(disabled=not replicate_api and LOCAL_CHATBOT_MODEL is None):
@@ -343,7 +343,7 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                 # and after that produces the output to the question
                 need_to_ignore_standalone_question_chain = LOCAL_CHATBOT_MODEL.hasHistoryMessages()
 
-            response, isfullConversationalType = llama2_response_func(
+            response, isfullConversationalType = llm_response_func(
                 prompt) if debug_model == 0 else "dummy debug response"
             if not isfullConversationalType:
                 need_to_ignore_standalone_question_chain = False
