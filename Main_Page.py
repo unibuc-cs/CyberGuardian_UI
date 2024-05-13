@@ -11,10 +11,8 @@ if 'cdb' not in st.session_state:
 
 #https://www.youtube.com/watch?v=eCbH2nPL9sU&ab_channel=CodingIsFun
 
-st.set_page_config(
-    page_title="Hello",
-    page_icon="👋",
-)
+st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_title="Hello", page_icon=":rocket:")
+
 
 st.write("# Welcome to Dynabic demo from University of Bucharest!")
 st.image("ubsigla.jpg", width=200)

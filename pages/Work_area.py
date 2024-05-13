@@ -19,6 +19,7 @@ if csu.option_use_trubrics:
 # This is a paid-like service to capture metrics, very good but restricted...
 # We implemented both variants
 
+st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_title="Hello", page_icon=":rocket:")
 
 USE_BASE_CLOUD_MODEL = False
 LOCAL_CHATBOT_MODEL = csu.getLocalChatBotModelInstance() if USE_BASE_CLOUD_MODEL is False else None
@@ -58,8 +59,6 @@ st.sidebar.markdown(
     f'<img src="data:image/gif;base64,{data_url}" width="200" height="200" style="opacity:0.4;filter:alpha(opacity=40);" alt="cat gif">',
     unsafe_allow_html=True,
 )
-
-
 def clear_chat_history():
     st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
 
@@ -103,6 +102,10 @@ def parseFunctionCalling(output: str):
         st.write("YES")
 
 
+def collapse_sidebar():
+    st.session_state.sidebar_state = 'collapsed'
+    st.set_page_config(initial_sidebar_state=st.session_state.sidebar_state)
+
 def setup_model_and_keys():
     global replicate_api
     global temperature, top_p, max_length, llm
@@ -115,6 +118,7 @@ def setup_model_and_keys():
 
         st.button('Clear Chat History', on_click=clear_chat_history)
         st.button('Save Chat', on_click=save_current_history)
+        st.button('Collapse', on_click=collapse_sidebar)
 
         if USE_BASE_CLOUD_MODEL:
             if debug_model == 0 or USE_BASE_CLOUD_MODEL is False:
