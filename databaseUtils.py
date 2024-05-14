@@ -6,7 +6,7 @@ import pandas as pd
 from userUtils import SecurityOfficer
 from typing import Union
 
-DEFAULT_CREDENTIALS_LOCATION = "data/cached_credentials.csv"
+DEFAULT_CREDENTIALS_LOCATION = "localdata/credentials/cached_credentials.csv"
 
 class CredentialsDB:
     def __init__(self):

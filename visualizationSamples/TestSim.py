@@ -24,16 +24,16 @@ st.write("A: Hi, Alert: I just identified that there are many timeouts and error
 
 st.write("H: Ok. I'm on it, can you show me a resource utilization graph comparison between a normal session and current situation")
 st.write("A: Here it is")
-showResourceUtilizationComparison("../dynabicChatbot/data/SmartHome_DDoSSnapshot/good_RESOURCES_OCCUPANCY_HACKED_False.csv",
-                                  "../dynabicChatbot/data/SmartHome_DDoSSnapshot/good_RESOURCES_OCCUPANCY_HACKED_True.csv")
+showResourceUtilizationComparison("../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/good_RESOURCES_OCCUPANCY_HACKED_False.csv",
+                                  "../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/good_RESOURCES_OCCUPANCY_HACKED_True.csv")
 
 
 st.write(
     "H: Show me the logs of the devices grouped by IP which have more than 25% requests over the median of a normal session per. Sort them by count")
 st.write("A: Here it is")
 
-show_outlier_ips_usage("../dynabicChatbot/data/SmartHome_DDoSSnapshot/DATASET_LOGS_HACKED_False.csv",
-                       "../dynabicChatbot/data/SmartHome_DDoSSnapshot/DATASET_LOGS_HACKED_True.csv")
+show_outlier_ips_usage("../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_False.csv",
+                       "../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_True.csv")
 
 
 
@@ -41,7 +41,7 @@ M = 3
 N = 10
 st.write(f"H: show a sample of GET requests from the top {M} demanding IPs, including their start time, end time, ")
 st.write("A: Here it is")
-showLastNGetQueriesFromTopM_demandingIPs(N=N, M=M, "../dynabicChatbot/data/SmartHome_DDoSSnapshot/DATASET_LOGS_HACKED_True.csv")
+showLastNGetQueriesFromTopM_demandingIPs(N=N, M=M, ".../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_True.csv")
 
 st.write("H: What could it mean if there are many IPs from different locations sending GET commands in a short time with random queries ?")
 st.write("A: This could be the sign of a DDoS attack")

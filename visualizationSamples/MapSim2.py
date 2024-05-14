@@ -1,3 +1,4 @@
+import os
 import random
 
 import streamlit as st
@@ -84,8 +85,10 @@ def shopComparativeColumnsDatasets(dataFrame: Union[str, pd.DataFrame], other: U
 
 
 if __name__ == '__main__':
-    st.write("H: Give me a world map of requests by comparing the current data and a known snapshot with bars")
+    st.write("H: Give me a world map of requests by comparing the current Data and a known snapshot with bars")
 
-    st.write("A:Here is the map, first is the now version, I will invoke FUNC_CALL shopComparativeColumnsDatasets with Params '../../dynabicChatbot/DATASET_LOGS_HACKED_True.csv' '../../dynabicChatbot/DATASET_LOGS_HACKED_False.csv'")
 
-    shopComparativeColumnsDatasets("../../dynabicChatbot/DATASET_LOGS_HACKED_True.csv", "../../dynabicChatbot/DATASET_LOGS_HACKED_False.csv")
+    print(os.getcwd())
+    st.write("A:Here is the map, first is the now version, I will invoke FUNC_CALL shopComparativeColumnsDatasets with Params '../../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_True.csv' '../../../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_False.csv'")
+
+    shopComparativeColumnsDatasets("../../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_True.csv", "../../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_False.csv")

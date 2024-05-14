@@ -34,11 +34,11 @@ leaflet.js library.
 
 `streamlit-folium` builds upon the convenient [Folium
 API](https://python-visualization.github.io/folium/modules.html) for building geospatial
-visualizations by adding a _bi-directional_ data transfer functionality. This not only
+visualizations by adding a _bi-directional_ Data transfer functionality. This not only
 allows for increased interactivity between the web browser and Python, but also the use
 of larger datasets through intelligent querying.
 
-### Bi-directional data model
+### Bi-directional Data model
 """
 left, right = st.columns(2)
 
@@ -73,7 +73,7 @@ with right:
     st_data
 
     """
-    As the user interacts with the data visualization, the values for `bounds` are
+    As the user interacts with the Data visualization, the values for `bounds` are
     constantly updating, along with `zoom`. With these values available in Python, we
     can now limit queries based on bounding box, change the marker size based on the
     `zoom` value and much more!

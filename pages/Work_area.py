@@ -12,6 +12,20 @@ import base64
 import importlib
 from streamlit_extras.stylable_container import stylable_container
 import threading
+import os
+
+# Checks if we are in "UI" folder. if not. return a path to get to it
+def getAdditionalPathNeeded()->str:
+    cwdPath = os.getcwd()
+    ind = cwdPath.find("/")
+    if ind == -1:
+        return ""
+    elif "UI" in cwdPath[ind+1:]:
+        return ""
+    else:
+        return "UI"
+
+
 
 if csu.option_use_trubrics:
     from trubrics.integrations.streamlit import FeedbackCollector
@@ -19,7 +33,7 @@ if csu.option_use_trubrics:
 # This is a paid-like service to capture metrics, very good but restricted...
 # We implemented both variants
 
-st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_title="Hello", page_icon=":rocket:")
+st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title="Hello", page_icon=":rocket:")
 
 USE_BASE_CLOUD_MODEL = False
 LOCAL_CHATBOT_MODEL = csu.getLocalChatBotModelInstance() if USE_BASE_CLOUD_MODEL is False else None
@@ -50,13 +64,14 @@ top_p = None
 max_length = None
 llm = None
 
-file_ = open("data/characters/man.png", "rb")
+#print(os.getcwd())
+file_ = open(os.path.join(getAdditionalPathNeeded(), "localdata/characters/man.png"), "rb")
 contents = file_.read()
 data_url = base64.b64encode(contents).decode("utf-8")
 file_.close()
 
 st.sidebar.markdown(
-    f'<img src="data:image/gif;base64,{data_url}" width="200" height="200" style="opacity:0.4;filter:alpha(opacity=40);" alt="cat gif">',
+    f'<img src="Data:image/gif;base64,{data_url}" width="200" height="200" style="opacity:0.4;filter:alpha(opacity=40);" alt="cat gif">',
     unsafe_allow_html=True,
 )
 def clear_chat_history():
@@ -66,7 +81,7 @@ def clear_chat_history():
 def save_current_history():
     currentUser = csu.getCurrentUser()
     timestamp = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
-    jsonSavePath = Path("data") / Path("saved_conversations") / f"{currentUser.username}_{timestamp}.json"
+    jsonSavePath = Path(getAdditionalPathNeeded()) / Path("Data") / Path("saved_conversations") / f"{currentUser.username}_{timestamp}.json"
     if jsonSavePath is not None:
         with open(jsonSavePath, "w") as write:
             json.dump(st.session_state.messages, write)
@@ -222,7 +237,7 @@ def display_feedback(feedback_key: str, use_emojis: bool, user: userUtils.Securi
 
         if res:
             timestamp = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
-            jsonSavePath = Path("data") / Path("feedback_collected") / f"{user.username}_{timestamp}.json" \
+            jsonSavePath = Path(getAdditionalPathNeeded()) / Path("localdata") / Path("feedback_collected") / f"{user.username}_{timestamp}.json" \
                 if csu.option_saveFeedbackAsJSON is True else None
 
             res["created_on"] = str(res["created_on"])
@@ -293,7 +308,7 @@ def doDemoScript():
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 4:
         st.session_state.messages.append({"role": "user",
-                                          "content": "Give me a world map of requests by comparing the current data and a known snapshot with bars"})
+                                          "content": "Give me a world map of requests by comparing the current Data and a known snapshot with bars"})
         st.session_state.DEMO_MODE_STEP += 1
         time.sleep(3)
         st.rerun()

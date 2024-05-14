@@ -176,7 +176,7 @@ def showLastNGetQueriesFromTopM_demandingIPs(M: int = 3, N: int = 10, dataset: U
         N = int(N)
 
     if dataset is None:
-        dataset = "../dynabicChatbot/data/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_True.csv"
+        dataset = "../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_True.csv"
 
     df = pd.read_csv(dataset) if isinstance(dataset, str) else dataset
     df_grouped = df.groupby(interested_columns, as_index=False).agg(count=("ip", "count"))

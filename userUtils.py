@@ -77,7 +77,7 @@ class SecurityOfficer():
         # If 0 - does not report when seeing strange situation from colleagues, 1 - report everything as expected
         self.correct_teamwork: float = 1.0
 
-        self.avatar_choice: str = "data/characters/woman.png"
+        self.avatar_choice: str = "Data/characters/woman.png"
 
     def __repr__(self):
         return "".join({f"{key}:{value}\n" for key, value in self.__dict__.items()})

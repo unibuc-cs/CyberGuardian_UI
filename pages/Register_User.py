@@ -116,7 +116,7 @@ def register_user_basic(form_name: str, location: str = 'main') -> bool:
                 pass
                 # csu.RegisterError('Username already taken')
         else:
-            csu.RegisterError('Please fill in data and take the photo')
+            csu.RegisterError('Please fill in Data and take the photo')
 
     return succeed
 
@@ -243,7 +243,7 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
     register_user_form.write('What is a phishing attack? Check all that apply')
     option_1 = register_user_form.checkbox('An attempt to steal sensitive information, typically in the form of usernames, passwords, credit cards, bank account information in order to utilize or sell the stolen information.', key="11")
     option_2 = register_user_form.checkbox('Using a program that records every keystroke made by a computer user', key="12")
-    option_3 = register_user_form.checkbox('Form of a malware attack in which an attacker encrypts the user’s data, folders, or entire device until a ‘ransom’ fee is paid', key="13")
+    option_3 = register_user_form.checkbox('Form of a malware attack in which an attacker encrypts the user’s Data, folders, or entire device until a ‘ransom’ fee is paid', key="13")
     option_4 = register_user_form.checkbox('A virus from a USB stick', key="14")
 
     tech_que_score_1 = 1.0 if option_1 is True and option_2 is False and option_3 is False and option_4 is False else 0.0
@@ -252,10 +252,10 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
 
     register_user_form.write('What is a ransomware attack? Check all that apply')
     option_1 = register_user_form.checkbox(
-        'Attackers are sending frequent or large data from different IPs to consume the server resources', key="21")
+        'Attackers are sending frequent or large Data from different IPs to consume the server resources', key="21")
     option_2 = register_user_form.checkbox('Using a program that records every keystroke made by a computer user', key="22")
     option_3 = register_user_form.checkbox(
-        'Form of malware attack in which an attacker encrypts the user’s data, folders, or entire device until a ‘ransom’ fee is paid', key="23")
+        'Form of malware attack in which an attacker encrypts the user’s Data, folders, or entire device until a ‘ransom’ fee is paid', key="23")
     option_4 = register_user_form.checkbox('A virus from a USB stick', key="24")
 
     tech_que_score_2 = 1.0 if option_1 is False and option_2 is True and option_3 is False and option_4 is False else 0.0
@@ -264,12 +264,12 @@ def register_user_technical(form_name: str, location: str = 'main') -> bool:
 
     register_user_form.write('What is a DDoS attack? Check all that apply ')
     option_1 = register_user_form.checkbox(
-        'Attackers are sending frequent or large data from a single IP to consume the server resources', key="31")
+        'Attackers are sending frequent or large Data from a single IP to consume the server resources', key="31")
     option_2 = register_user_form.checkbox('Using a program that records every keystroke made by a computer user', key="32")
     option_3 = register_user_form.checkbox(
         'Multiple IPs from different locations try to connect and send information to servers or network resources',
         key="33")
-    option_4 = register_user_form.checkbox('Form of malware attack in which an attacker encrypts the user’s data, '
+    option_4 = register_user_form.checkbox('Form of malware attack in which an attacker encrypts the user’s Data, '
                                            'folders, or entire device until a ‘ransom’ fee is paid', key="34")
 
     tech_que_score_3 = 1.0 if option_1 is False and option_2 is False and option_3 is True and option_4 is False else 0.0
@@ -383,7 +383,7 @@ def register_user_preferences(form_name: str, location: str = 'main') -> bool:
         if register_user_form.toggle('Use polite formulations', True) is True \
         else Preference_Politely.FORMAL_PRESENTATION
 
-    avatarsList = ["data/characters/woman.png", "data/characters/man.png", "data/characters/None.png"]
+    avatarsList = ["Data/characters/woman.png", "Data/characters/man.png", "Data/characters/None.png"]
     img = image_select("Select which avatar you would like between the first two, or the last if you don't want one.", avatarsList)
     user.avatar_choice = img
 

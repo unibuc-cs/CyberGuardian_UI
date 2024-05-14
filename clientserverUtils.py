@@ -1,22 +1,17 @@
 import streamlit as st
 
-import databaseUtils
-from userUtils import SecurityOfficer
 from userUtils import SecurityOfficer
 import userUtils
 from databaseUtils import CredentialsDB
-import pandas as pd
-from typing import Union
 from timeit import default_timer
 
-RELATIVE_PATH_TO_LOCAL_LLM_TRAINED = "../dynabicChatbot"
+RELATIVE_PATH_TO_LOCAL_LLM_TRAINED = "../"
 
 import sys
-import os
+
 sys.path.append(RELATIVE_PATH_TO_LOCAL_LLM_TRAINED)
 
-import QuestionAndAnswerUtils
-from QuestionAndAnswerUtils import *
+from LLM.QuestionAndAnswerUtils import *
 
 
 # Which platform for feedback retention, either trubrics or manual processing
@@ -77,7 +72,7 @@ def getLocalChatBotModelInstance():
     global g_securityChatBotLocal
     if g_securityChatBotLocal is None:
 
-        # Need to change the directory then revert back since ther model needs to load some vector data for RAG stored locally
+        # Need to change the directory then revert back since ther model needs to load some vector Data for RAG stored locally
         # but relative to the model's path!
         import os
         cwd = os.getcwd()
@@ -139,7 +134,7 @@ def checkCreateCredentialsDB():
     g_credentialsDB = st.session_state.cdb
 
 def getCachedImgPathForUsername(username: str):
-    res = f"data/{username}_cachedProfilePic.png"
+    res = f"localdata/credentials/{username}_cachedProfilePic.png"
     return res
 
 def register_credentials(newUser: SecurityOfficer):
@@ -169,7 +164,7 @@ def showLoggedUserSidebar():
     if st.sidebar.button("Logout"):
         logout()
 
-    st.sidebar.write("Some hidden data normally..:")
+    st.sidebar.write("Some hidden Data normally..:")
     st.sidebar.write(f"Expertise declared: {userUtils.getUserExpertiseStr(user.expertise)}")
     st.sidebar.write(f"Tech eval individual score: {user.technical_responses_eval}")
     st.sidebar.write(f"Tech eval in team score: {user.team_work_tech_value}")
