@@ -117,7 +117,7 @@ def show_outlier_ips_usage(normaldataset: Union[str, pd.DataFrame], outlierdatas
 
     mask_above_mean_plus = np.where((df_outliers["count"] > median_normal_plus) & ~(
         df_outliers["ip"].isin(ips_which_were_highconsumers_in_past_too)))
-    st.write(f"A: The items above mask mean that were not high consumers in the past too are {mask_above_mean_plus}")
+    #st.write(f"A: The items above mask mean that were not high consumers in the past too are {mask_above_mean_plus}")
 
     # Filter by the mask and sort the values by usage
     df_outliers = df_outliers.loc[mask_above_mean_plus]
@@ -146,6 +146,7 @@ def showResourceUtilizationComparison(nonHackedPath: str, hackedPath: str):
         )
     else:
         # %%
+
         df_normal = pd.read_csv(nonHackedPath)
         df_outlier = pd.read_csv(hackedPath)
 
@@ -181,6 +182,8 @@ def showLastNGetQueriesFromTopM_demandingIPs(M: int = 3, N: int = 10, dataset: U
     df = pd.read_csv(dataset) if isinstance(dataset, str) else dataset
     df_grouped = df.groupby(interested_columns, as_index=False).agg(count=("ip", "count"))
     df_grouped.sort_values(by='count', ascending=False, inplace=True)
+    #for i in range(len(df_grouped)):
+    df_grouped['index'] = list(range(len(df_grouped)))
 
     topDemandingIPs = set(df_grouped['ip'][:M].to_dict().values())
 

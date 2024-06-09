@@ -14,6 +14,12 @@ from streamlit_extras.stylable_container import stylable_container
 import threading
 import os
 
+
+
+
+import os
+from demoSupport import UseCase, USE_CASE
+
 # Checks if we are in "UI" folder. if not. return a path to get to it
 def getAdditionalPathNeeded()->str:
     cwdPath = os.getcwd()
@@ -35,12 +41,25 @@ if csu.option_use_trubrics:
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title="Hello", page_icon=":rocket:")
 
+cwd = os.getcwd()
+print(f"Current working dir: {cwd}")
+
 USE_BASE_CLOUD_MODEL = False
-LOCAL_CHATBOT_MODEL = csu.getLocalChatBotModelInstance() if USE_BASE_CLOUD_MODEL is False else None
+if "LocalChatBotModel" in st.session_state:
+    # This is resetting everything so reset the session state except the model
+    LOCAL_CHATBOT_MODEL = st.session_state.LocalChatBotModel
+    #
+    # st.session_state.clear()
+    # st.session_state.LocalChatBotModel = LOCAL_CHATBOT_MODEL
+    #
+else:
+    LOCAL_CHATBOT_MODEL = csu.getLocalChatBotModelInstance() if USE_BASE_CLOUD_MODEL is False else None
+    st.session_state.LocalChatBotModel = LOCAL_CHATBOT_MODEL
+
 replicate_api = None
 showREPLICATE_details = False
 
-debug = 0
+debug = 1 if "DEMO_MODE_NOLOGIN" in os.environ else 0
 debug_model = 0
 if debug == 0:  # Require signin if not logged in
     if not csu.logged_in():
@@ -49,7 +68,7 @@ if debug == 0:  # Require signin if not logged in
 
     csu.showLoggedUserSidebar()
 
-DEMO_MODE = (USE_BASE_CLOUD_MODEL is False) and True # If to implement the DdoS trigger stuff
+DEMO_MODE = (USE_BASE_CLOUD_MODEL is False) and (USE_CASE != UseCase.Default)
 DEMO_MODE_SCRIPT = True # If true, the script will be run without user input
 
 #######################################
@@ -287,7 +306,20 @@ def display_chat_history():
 
 from schedule import every, repeat, run_pending
 
-def doDemoScript():
+
+
+
+######## DEMO STUFF
+
+
+## Case 1: smart home
+
+
+def demo_trigger_msg_SmartHome():
+    st.session_state.messages.append({"role": "assistant",
+                                      "content": "Alert: there seems to be many timeouts and 503 error codes on the IoT Hub. Please investigate! I can help you with this."})
+
+def doDemoScript_SmartHome():
     if st.session_state.DEMO_MODE_STEP == 1:
         st.session_state.messages.append({"role": "user",
                                           "content": "Ok. I'm on it, can you show me a resource utilization graph comparison between a normal session and current situation"})
@@ -326,6 +358,75 @@ def doDemoScript():
         st.rerun()
 
 
+## Case 2: Hospital IT
+
+def demo_trigger_msg_Hospital():
+    st.session_state.messages.append({"role": "assistant",
+                                      "content": "Alert: there are many issues opened in the ticketing system suggesting "
+                                                 "that that doctors can't access the patients' DICOM and X-Ray records. "
+                                                 "Please investigate! I can help you with this."})
+
+    st.session_state.DEMO_MODE_STEP = 1 # Reset the step
+
+def doDemoScript_Hospital():
+    if st.session_state.DEMO_MODE_STEP == 1:
+        st.session_state.messages.append({"role": "user",
+                                          "content": "What are the IPs of the servers hosting the DICOM "
+                                                     "and X-Ray records? Can you show me a graph "
+                                                     "of their resource utilization over the last 24 hours?"})
+        st.session_state.DEMO_MODE_STEP += 1
+        time.sleep(3)
+        st.rerun()
+    elif st.session_state.DEMO_MODE_STEP == 2:
+        # st.session_state.messages.append({"role": "user",
+        #                                   "content": "Can you show the logs of internal servers handling these services "
+        #                                              "grouped by IP which have more than 35% requests over "
+        #                                              "the median of a normal session per. Sort them by count"})
+        st.session_state.DEMO_MODE_STEP += 1
+        # time.sleep(3)
+        st.rerun()
+    elif st.session_state.DEMO_MODE_STEP == 3:
+        st.session_state.messages.append({"role": "user",
+                                          "content": "Can you show a sample of GET requests from the top 4 demanding IPs, "
+                                                     "including their start time, end time? Only show the last 10 logs."})
+        st.session_state.DEMO_MODE_STEP += 1
+        time.sleep(3)
+        st.rerun()
+    elif st.session_state.DEMO_MODE_STEP == 4:
+        st.session_state.messages.append({"role": "user",
+                                          "content": "Give me a map of requests by comparing the current "
+                                                     "requests numbers "
+                                                     "and a known snapshot using bars and colors"})
+        st.session_state.DEMO_MODE_STEP += 1
+        time.sleep(3)
+        st.rerun()
+    elif st.session_state.DEMO_MODE_STEP == 5:
+        st.session_state.messages.append({"role": "user",
+                                          "content": "Can it be an attack if several servers receive too many queries from different IPs at random locations in a very short time window?"})
+        st.session_state.DEMO_MODE_STEP += 1
+        time.sleep(3)
+        st.rerun()
+    elif st.session_state.DEMO_MODE_STEP == 6:
+        st.session_state.messages.append({"role": "user",
+                                          "content": "Generate me a python code to insert in a pandas dataframe named "
+                                                     "Firewalls a new IP 183.233.154.202 as blocked "
+                                                     "under the name of IoTDevice"})
+        st.session_state.DEMO_MODE_STEP += 1
+        time.sleep(3)
+
+
+# Switch between the use cases
+DEMO_TRIGGER_MSG_FUNC = None
+DEMO_TRIGGER_MSG_FOLLOWUP = None
+if USE_CASE == UseCase.SmartHome:
+    DEMO_TRIGGER_MSG_FUNC = demo_trigger_msg_SmartHome
+    DEMO_TRIGGER_MSG_FOLLOWUP = doDemoScript_SmartHome
+elif USE_CASE == UseCase.Hospital:
+    DEMO_TRIGGER_MSG_FUNC = demo_trigger_msg_Hospital
+    DEMO_TRIGGER_MSG_FOLLOWUP = doDemoScript_Hospital
+else:
+    DEMO_TRIGGER_MSG_FUNC = None
+    DEMO_TRIGGER_MSG_FOLLOWUP = None
 
 ################### ACtive rendering code
 initialize_work_area()
@@ -340,11 +441,13 @@ if prompt := st.chat_input(disabled=not replicate_api and LOCAL_CHATBOT_MODEL is
     with st.chat_message("user"):
         st.write(prompt)
 
+
 # Generate a new response if last message is not from assistant
 need_to_ignore_standalone_question_chain = False
-if csu.isTriggered(cancel_trigger=True) and ('DEMO_MODE_TRIGGERED' not in st.session_state or st.session_state.DEMO_MODE_TRIGGERED is False):
-    st.session_state.messages.append({"role": "assistant",
-                                  "content": "Alert: there seems to be many timeouts and 503 error codes on the IoT Hub. Please investigate! I can help you with this."})
+if csu.isTriggered(cancel_trigger=True) and ('DEMO_MODE_TRIGGERED' not in st.session_state
+                                             or st.session_state.DEMO_MODE_TRIGGERED is False):
+    assert DEMO_TRIGGER_MSG_FUNC, "DEMO_TRIGGER_MSG_FUNC is not defined"
+    DEMO_TRIGGER_MSG_FUNC()
 
     st.session_state.DEMO_MODE_TRIGGERED = True
     st.session_state.DEMO_MODE_STEP = 1
@@ -392,7 +495,7 @@ elif st.session_state.messages[-1]["role"] != "assistant":
     st.rerun()
 
 elif DEMO_MODE is True and st.session_state.DEMO_MODE_TRIGGERED:
-    doDemoScript()
+    DEMO_TRIGGER_MSG_FOLLOWUP()
 
 
 

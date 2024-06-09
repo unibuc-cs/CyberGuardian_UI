@@ -77,6 +77,8 @@ def getLocalChatBotModelInstance():
         import os
         cwd = os.getcwd()
         os.chdir(RELATIVE_PATH_TO_LOCAL_LLM_TRAINED)
+        cwd_new = os.getcwd()
+        print(f"Changed directory to: {cwd_new}")
 
         g_securityChatBotLocal = QASystem(
             QuestionRewritingPrompt=QASystem.QUESTION_REWRITING_TYPE.QUESTION_REWRITING_DEFAULT,
