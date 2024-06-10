@@ -413,7 +413,7 @@ def doDemoScript_Hospital():
                                                      "under the name of IoTDevice"})
         st.session_state.DEMO_MODE_STEP += 1
         time.sleep(3)
-
+        st.rerun()
 
 # Switch between the use cases
 DEMO_TRIGGER_MSG_FUNC = None
