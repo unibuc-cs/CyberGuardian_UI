@@ -125,8 +125,18 @@ def generate_cloud_llm_response_baseversion(prompt_input: str):
     return output, False
 
 
+
+def history_update_cloud_llm(old_message: str, new_message: str) -> bool:
+    assert False, "not implemented"
+
+def history_update_local_llm(old_message: str, new_message: str) -> bool:
+    return LOCAL_CHATBOT_MODEL.updateHistory(old_message, new_message)
+
+
 def generate_local_llm_response_dynabicModel(prompt_input: str, add_to_history: True):
-    response, isfullConversationalType = LOCAL_CHATBOT_MODEL.ask_question(prompt_input, add_to_history=add_to_history)
+    response, isfullConversationalType = LOCAL_CHATBOT_MODEL.ask_question(prompt_input,
+                                                                          add_to_history=add_to_history,
+                                                                          use_history=True)
     return response, isfullConversationalType
 
 
@@ -198,6 +208,8 @@ if 'g_DemoTimer' not in st.session_state:
     st.session_state.g_DemoTimer: threading.Timer = None
     FIRST_TIME_DEMOTIMER_CREATION = True
     st.session_state.DEMO_MODE_TRIGGERED = False
+    st.session_state.DEBUG_SKIP_TO_STEP = 4 # Skip to a specific step in the demo
+    st.session_state.DEBUG_SKIP_JUMP_TO_END = True # Jump to end after the skip
 
 def check_triggers():
     if csu.isTriggered(cancel_trigger=False):
@@ -320,41 +332,45 @@ def demo_trigger_msg_SmartHome():
                                       "content": "Alert: there seems to be many timeouts and 503 error codes on the IoT Hub. Please investigate! I can help you with this."})
 
 def doDemoScript_SmartHome():
+    if st.session_state.DEBUG_SKIP_TO_STEP is not None:
+        st.session_state.DEMO_MODE_STEP = st.session_state.DEBUG_SKIP_TO_STEP
+        st.session_state.DEBUG_SKIP_TO_STEP = None
+
     if st.session_state.DEMO_MODE_STEP == 1:
         st.session_state.messages.append({"role": "user",
                                           "content": "Ok. I'm on it, can you show me a resource utilization graph comparison between a normal session and current situation"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(1)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 2:
         st.session_state.messages.append({"role": "user",
                                           "content": "Show me the logs of the devices grouped by IP which have more than 25% requests over the median of a normal session per. Sort them by count"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(1)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 3:
         st.session_state.messages.append({"role": "user",
                                           "content": "Can you show a sample of GET requests from the top 3 demanding IPs, including their start time, end time? Only show the last 10 logs."})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(1)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 4:
         st.session_state.messages.append({"role": "user",
                                           "content": "Give me a world map of requests by comparing the current Data and a known snapshot with bars"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(1)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 5:
         st.session_state.messages.append({"role": "user",
                                           "content": "What could it mean if there are many IPs from different locations sending GET commands in a short time with random queries ?"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(1)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 6:
         st.session_state.messages.append({"role": "user",
                                           "content": "Generate me a python code to insert in a pandas dataframe named Firewalls a new IP 10.20.30.40 as blocked under the name of IoTDevice"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(1)
         st.rerun()
 
 
@@ -369,13 +385,17 @@ def demo_trigger_msg_Hospital():
     st.session_state.DEMO_MODE_STEP = 1 # Reset the step
 
 def doDemoScript_Hospital():
+    if st.session_state.DEBUG_SKIP_TO_STEP is not None:
+        st.session_state.DEMO_MODE_STEP = st.session_state.DEBUG_SKIP_TO_STEP
+        st.session_state.DEBUG_SKIP_TO_STEP = None
+
     if st.session_state.DEMO_MODE_STEP == 1:
         st.session_state.messages.append({"role": "user",
                                           "content": "What are the IPs of the servers hosting the DICOM "
                                                      "and X-Ray records? Can you show me a graph "
                                                      "of their resource utilization over the last 24 hours?"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(1)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 2:
         # st.session_state.messages.append({"role": "user",
@@ -383,36 +403,42 @@ def doDemoScript_Hospital():
         #                                              "grouped by IP which have more than 35% requests over "
         #                                              "the median of a normal session per. Sort them by count"})
         st.session_state.DEMO_MODE_STEP += 1
-        # time.sleep(3)
+        # time.sleep(1)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 3:
         st.session_state.messages.append({"role": "user",
-                                          "content": "Can you show a sample of GET requests from the top 4 demanding IPs, "
-                                                     "including their start time, end time? Only show the last 10 logs."})
+                                          "content": "Give me a map with locations where these requests come from by comparing the current "
+                                                     "requests and a normal day usage, using bars and colors"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(1)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 4:
         st.session_state.messages.append({"role": "user",
-                                          "content": "Give me a map of requests by comparing the current "
-                                                     "requests numbers "
-                                                     "and a known snapshot using bars and colors"})
+                                          "content": "Can you show a sample of GET requests from the top 10 demanding IPs, highlighting the first 4?"
+                                                     "Include their locations and number of requests."})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+
+        if st.session_state.DEBUG_SKIP_JUMP_TO_END:
+            st.session_state.DEMO_MODE_STEP = 7
+            st.session_state.DEBUG_SKIP_JUMP_TO_END = None
+
+        time.sleep(1)
         st.rerun()
+
     elif st.session_state.DEMO_MODE_STEP == 5:
         st.session_state.messages.append({"role": "user",
                                           "content": "Can it be an attack if several servers receive too many queries from different IPs at random locations in a very short time window?"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(1)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 6:
         st.session_state.messages.append({"role": "user",
                                           "content": "Generate me a python code to insert in a pandas dataframe named "
-                                                     "Firewalls a new IP 183.233.154.202 as blocked "
-                                                     "under the name of IoTDevice"})
+                                                     "Firewalls a new IP 183.233.154.202 as blocked including the name of the attacker"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(1)
+        st.rerun()
+        ##########################################
 
 
 # Switch between the use cases
@@ -434,6 +460,8 @@ display_chat_history()
 
 llm_response_func = generate_cloud_llm_response_baseversion if USE_BASE_CLOUD_MODEL is True else \
     generate_local_llm_response_dynabicModel
+
+ll_history_update_func = history_update_cloud_llm if USE_BASE_CLOUD_MODEL is True else history_update_local_llm
 
 # User-provided prompt
 if prompt := st.chat_input(disabled=not replicate_api and LOCAL_CHATBOT_MODEL is None):
@@ -466,27 +494,31 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                 need_to_ignore_standalone_question_chain = LOCAL_CHATBOT_MODEL.hasHistoryMessages()
 
             # TODO: fix second param to work for python code too!
-            response, isfullConversationalType = llm_response_func(
-                prompt, add_to_history=False) if debug_model == 0 else "dummy debug response"
+            # Fix this isfullConversationalType at source somehow
+            add_to_hist = False # True if "top 4 demanding IPs" in prompt else False # MEGA HACK
+            response_streamer, isfullConversationalType = llm_response_func(
+                prompt, add_to_history=add_to_hist) if debug_model == 0 else "dummy debug response"
             if not isfullConversationalType:
                 need_to_ignore_standalone_question_chain = False
             placeholder = st.empty()
             full_response = ''
 
             if need_to_ignore_standalone_question_chain:
-                for item in response:
+                for item in response_streamer:
                     pass
                 placeholder.markdown("<br>")
 
-            for item in response:
+            for item in response_streamer:
                 full_response += item
                 placeholder.markdown(full_response)
 
             # Parse a bit the response
             if not USE_BASE_CLOUD_MODEL:
-                res = LOCAL_CHATBOT_MODEL.solveFunctionCalls(full_response)
+                # res = LOCAL_CHATBOT_MODEL.solveFunctionCalls(full_response, do_history_update=add_to_hist)
+
                 if DEMO_MODE and DEMO_MODE_SCRIPT:
-                    time.sleep(5)
+                    time.sleep(1)
+
             # if res is False:
             placeholder.markdown(full_response)
 
