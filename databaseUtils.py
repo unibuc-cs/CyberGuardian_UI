@@ -5,6 +5,7 @@ import pandas
 import pandas as pd
 from userUtils import SecurityOfficer
 from typing import Union
+import projsecrets
 
 DEFAULT_CREDENTIALS_LOCATION = "localdata/credentials/cached_credentials.csv"
 
@@ -20,11 +21,19 @@ class CredentialsDB:
 
     # Either load it from default path if exists, or creates and save for the first time
     def initialize(self):
+
+        # Change to the UI folder as current working directory
+        cwd_now = os.getcwd()
+        os.chdir(projsecrets.project_path_UI_folder)
+
         if os.path.exists(DEFAULT_CREDENTIALS_LOCATION):
             self.load_credentials_dataset()
         else:
             self.create_credentials_dataset()
             self.save_credentials_dataset()
+
+        # Change back to the original working directory
+        os.chdir(cwd_now)
 
     # Creates an empty dataframe
     def create_credentials_dataset(self) -> bool:
