@@ -14,24 +14,14 @@ from streamlit_extras.stylable_container import stylable_container
 import threading
 import os
 
+import projsecrets
+from projsecrets import project_path, TOKEN_CODE_EXEC_CONFIRM, HOOK_FUNC_NAME_TOKEN
 
-
+# This is the UI part of the code with different functions to call to show visualizations
+dynabicFunctionsUIModule = importlib.import_module("dynabicagenttools")
 
 import os
 from demoSupport import UseCase, USE_CASE
-
-# Checks if we are in "UI" folder. if not. return a path to get to it
-def getAdditionalPathNeeded()->str:
-    cwdPath = os.getcwd()
-    ind = cwdPath.find("/")
-    if ind == -1:
-        return ""
-    elif "UI" in cwdPath[ind+1:]:
-        return ""
-    else:
-        return "UI"
-
-
 
 if csu.option_use_trubrics:
     from trubrics.integrations.streamlit import FeedbackCollector
@@ -42,7 +32,7 @@ if csu.option_use_trubrics:
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title="Hello", page_icon=":rocket:")
 
 cwd = os.getcwd()
-print(f"Current working dir: {cwd}")
+#print(f"Current working dir: {cwd}")
 
 USE_BASE_CLOUD_MODEL = False
 if "LocalChatBotModel" in st.session_state:
@@ -58,6 +48,8 @@ else:
 
 replicate_api = None
 showREPLICATE_details = False
+
+SLEEP_TIME_BETWEEN_QUESTIONS = 5
 
 debug = 1 if "DEMO_MODE_NOLOGIN" in os.environ else 0
 debug_model = 0
@@ -84,7 +76,7 @@ max_length = None
 llm = None
 
 #print(os.getcwd())
-file_ = open(os.path.join(getAdditionalPathNeeded(), "localdata/characters/man.png"), "rb")
+file_ = open(os.path.join(projsecrets.project_path_UI_folder, "localdata/characters/man.png"), "rb")
 contents = file_.read()
 data_url = base64.b64encode(contents).decode("utf-8")
 file_.close()
@@ -100,7 +92,7 @@ def clear_chat_history():
 def save_current_history():
     currentUser = csu.getCurrentUser()
     timestamp = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
-    jsonSavePath = Path(getAdditionalPathNeeded()) / Path("Data") / Path("saved_conversations") / f"{currentUser.username}_{timestamp}.json"
+    jsonSavePath = Path(projsecrets.project_path_UI_folder) / Path("Data") / Path("saved_conversations") / f"{currentUser.username}_{timestamp}.json"
     if jsonSavePath is not None:
         with open(jsonSavePath, "w") as write:
             json.dump(st.session_state.messages, write)
@@ -125,9 +117,19 @@ def generate_cloud_llm_response_baseversion(prompt_input: str):
     return output, False
 
 
-def generate_local_llm_response_dynabicModel(prompt_input: str, add_to_history: True):
-    response, isfullConversationalType = LOCAL_CHATBOT_MODEL.ask_question(prompt_input, add_to_history=add_to_history)
-    return response, isfullConversationalType
+
+def history_update_cloud_llm(old_message: str, new_message: str) -> bool:
+    assert False, "not implemented"
+
+def history_update_local_llm(old_message: str, new_message: str) -> bool:
+    return LOCAL_CHATBOT_MODEL.updateHistory(old_message, new_message)
+
+
+def generate_local_llm_response_dynabicModel(prompt_input: str, add_to_history: True, use_history: True):
+    response, isfullConversationalType, source_code_tool, source_code_ui, tool_code_needs_confirm = LOCAL_CHATBOT_MODEL.ask_question(prompt_input,
+                                                                          add_to_history=add_to_history,
+                                                                          use_history=use_history)
+    return response, isfullConversationalType, source_code_tool, source_code_ui, tool_code_needs_confirm
 
 
 # TODO in the next versions:
@@ -198,6 +200,8 @@ if 'g_DemoTimer' not in st.session_state:
     st.session_state.g_DemoTimer: threading.Timer = None
     FIRST_TIME_DEMOTIMER_CREATION = True
     st.session_state.DEMO_MODE_TRIGGERED = False
+    st.session_state.DEBUG_SKIP_TO_STEP = None # Skip to a specific step in the demo
+    st.session_state.DEBUG_SKIP_JUMP_TO_NEXT = None #6 # Jump to this step after the previous skip step
 
 def check_triggers():
     if csu.isTriggered(cancel_trigger=False):
@@ -210,7 +214,9 @@ def initialize_work_area():
     # Init LLM generated responses - TODO: update assist message here
     if "messages" not in st.session_state.keys():
         st.session_state.messages = [{"role": "assistant",
-                                      "content": "Hi! I will let you know when a problem appears. Meantime you can ask me anything"}]
+                                      "content": "Hi! I will let you know when a problem appears. Meantime you can ask me anything",
+                                        "source_code_tool": None,
+                                    "source_code_ui": None}]
 
     if DEMO_MODE and FIRST_TIME_DEMOTIMER_CREATION:
         csu.startDemoTrigger()
@@ -256,7 +262,7 @@ def display_feedback(feedback_key: str, use_emojis: bool, user: userUtils.Securi
 
         if res:
             timestamp = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
-            jsonSavePath = Path(getAdditionalPathNeeded()) / Path("localdata") / Path("feedback_collected") / f"{user.username}_{timestamp}.json" \
+            jsonSavePath = Path(projsecrets.project_path_UI_folder) / Path("localdata") / Path("feedback_collected") / f"{user.username}_{timestamp}.json" \
                 if csu.option_saveFeedbackAsJSON is True else None
 
             res["created_on"] = str(res["created_on"])
@@ -268,9 +274,18 @@ def display_feedback(feedback_key: str, use_emojis: bool, user: userUtils.Securi
     return res
 
 
+def remove_double_quota(input_str: str) -> str:
+    if input_str is None:
+        return None
+    if input_str[0] == '"' and input_str[-1] == '"':
+        return input_str[1:-1]
+    if input_str[0] == "'" and input_str[-1] != "'":
+        return input_str[1:-1]
+
+    return input_str
+
+
 # Parse any function call in the response and returns True if that's the case otherwise return True
-
-
 def display_chat_history():
     # Display or clear chat messages
 
@@ -286,11 +301,50 @@ def display_chat_history():
             break
 
     for n, message in enumerate(st.session_state.messages):
-        with st.chat_message(message["role"]):
+        with (((st.chat_message(message["role"])))):
             st.write(message["content"])
             if message["role"] == "assistant":
-                if not USE_BASE_CLOUD_MODEL:
-                    res = LOCAL_CHATBOT_MODEL.solveFunctionCalls(message["content"])
+                if USE_BASE_CLOUD_MODEL:
+                    continue
+
+                python_code_tool = message.get("source_code_tool", None)
+                if python_code_tool is not None and python_code_tool != "":
+                    st.code(python_code_tool, language="python")
+
+                python_code_ui = message.get("source_code_ui", None)
+                if python_code_ui is not None and python_code_ui != "":
+                    python_code_ui = python_code_ui.strip()
+                    # Process the call here
+                    idx_func_name = python_code_ui.find("FUNC") + len("FUNC") + 1
+                    idx_params_token = python_code_ui.find("PARAMS")
+                    func_name = remove_double_quota(python_code_ui[idx_func_name:idx_params_token].strip())
+                    idx_params_name = idx_params_token + len("PARAMS") + 1
+                    assert python_code_ui[idx_params_name] == "[" and python_code_ui[-1] == "]", "Check if the params are in a list"
+                    params = python_code_ui[idx_params_name+1:-1].split(',')
+                    params = [remove_double_quota(p.strip()) for p in params]
+
+                    func_to_call = getattr(dynabicFunctionsUIModule, func_name)
+                    if "tool_code_needs_confirm" not in message or message["tool_code_needs_confirm"] is False:
+                        res = func_to_call(*params)
+                    else:
+                        # Show confirmation button for the code to be run
+                        st.write("The code below is generated by the tool. Please confirm if you want to run it.")
+                        if st.button("Confirm"):
+                            # If the user confirms, then run the code
+                            python_tool_code = message.get("source_code_tool", None)
+                            assert python_tool_code, "No tool code to run!!!"  # This should never happen
+
+                            python_tool_code_hook = getattr(dynabicFunctionsUIModule, HOOK_FUNC_NAME_TOKEN)
+                            assert python_tool_code_hook, "No hook function to run the code!!!"  # This should never happen
+                            python_tool_code_hook(None, python_tool_code)#, {TOKEN_CODE_EXEC_CONFIRM: True})
+
+                            # Set the flag to False so the code is not run again and confirm button is not shown
+                            message["tool_code_needs_confirm"] = False
+
+                            # Call any related UI function to show confirmation
+                            res = func_to_call(*params)
+                            # If the function returns a rerun, then rerun the app
+                            st.rerun()
 
         if currentUser.feedbackArea == userUtils.Preference_FeedbackArea.ALLOW_FEEDBACK_ON_HISTORY:
             if message["role"] == "assistant" and n > 1:
@@ -304,57 +358,54 @@ def display_chat_history():
                 feedback_key = f"feedback_{int(n / 2)}"
                 display_feedback(feedback_key, use_emojis, currentUser)
 
-from schedule import every, repeat, run_pending
-
-
-
-
 ######## DEMO STUFF
 
 
 ## Case 1: smart home
-
-
 def demo_trigger_msg_SmartHome():
     st.session_state.messages.append({"role": "assistant",
                                       "content": "Alert: there seems to be many timeouts and 503 error codes on the IoT Hub. Please investigate! I can help you with this."})
 
 def doDemoScript_SmartHome():
+    if st.session_state.DEBUG_SKIP_TO_STEP is not None:
+        st.session_state.DEMO_MODE_STEP = st.session_state.DEBUG_SKIP_TO_STEP
+        st.session_state.DEBUG_SKIP_TO_STEP = None
+
     if st.session_state.DEMO_MODE_STEP == 1:
         st.session_state.messages.append({"role": "user",
                                           "content": "Ok. I'm on it, can you show me a resource utilization graph comparison between a normal session and current situation"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 2:
         st.session_state.messages.append({"role": "user",
                                           "content": "Show me the logs of the devices grouped by IP which have more than 25% requests over the median of a normal session per. Sort them by count"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 3:
         st.session_state.messages.append({"role": "user",
                                           "content": "Can you show a sample of GET requests from the top 3 demanding IPs, including their start time, end time? Only show the last 10 logs."})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 4:
         st.session_state.messages.append({"role": "user",
                                           "content": "Give me a world map of requests by comparing the current Data and a known snapshot with bars"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 5:
         st.session_state.messages.append({"role": "user",
                                           "content": "What could it mean if there are many IPs from different locations sending GET commands in a short time with random queries ?"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 6:
         st.session_state.messages.append({"role": "user",
-                                          "content": "Generate me a python code to insert in a pandas dataframe named Firewalls a new IP 10.20.30.40 as blocked under the name of IoTDevice"})
+                                          "content": "Generate and execute a python code to insert in the Firewall dataset these top IPs excepting 130.112.80.168 which seems like a legit one."})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
 
 
@@ -369,13 +420,17 @@ def demo_trigger_msg_Hospital():
     st.session_state.DEMO_MODE_STEP = 1 # Reset the step
 
 def doDemoScript_Hospital():
+    if st.session_state.DEBUG_SKIP_TO_STEP is not None:
+        st.session_state.DEMO_MODE_STEP = st.session_state.DEBUG_SKIP_TO_STEP
+        st.session_state.DEBUG_SKIP_TO_STEP = None
+
     if st.session_state.DEMO_MODE_STEP == 1:
         st.session_state.messages.append({"role": "user",
                                           "content": "What are the IPs of the servers hosting the DICOM "
                                                      "and X-Ray records? Can you show me a graph "
                                                      "of their resource utilization over the last 24 hours?"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 2:
         # st.session_state.messages.append({"role": "user",
@@ -383,37 +438,42 @@ def doDemoScript_Hospital():
         #                                              "grouped by IP which have more than 35% requests over "
         #                                              "the median of a normal session per. Sort them by count"})
         st.session_state.DEMO_MODE_STEP += 1
-        # time.sleep(3)
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 3:
         st.session_state.messages.append({"role": "user",
-                                          "content": "Can you show a sample of GET requests from the top 4 demanding IPs, "
-                                                     "including their start time, end time? Only show the last 10 logs."})
+                                          "content": "Give me a map with locations where these requests come from by comparing the current "
+                                                     "requests and a normal day usage, using bars and colors"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 4:
         st.session_state.messages.append({"role": "user",
-                                          "content": "Give me a map of requests by comparing the current "
-                                                     "requests numbers "
-                                                     "and a known snapshot using bars and colors"})
+                                          "content": "Can you show a sample of GET requests from the top 10 demanding IPs, highlighting the first 4?"
+                                                     " Include their IDs, locations, and number of requests."})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+
+        if st.session_state.DEBUG_SKIP_JUMP_TO_NEXT:
+            st.session_state.DEMO_MODE_STEP = st.session_state.DEBUG_SKIP_JUMP_TO_NEXT
+            st.session_state.DEBUG_SKIP_JUMP_TO_NEXT = None
+
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
+
     elif st.session_state.DEMO_MODE_STEP == 5:
         st.session_state.messages.append({"role": "user",
                                           "content": "Can it be an attack if several servers receive too many queries from different IPs at random locations in a very short time window?"})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
     elif st.session_state.DEMO_MODE_STEP == 6:
         st.session_state.messages.append({"role": "user",
-                                          "content": "Generate me a python code to insert in a pandas dataframe named "
-                                                     "Firewalls a new IP 183.233.154.202 as blocked "
-                                                     "under the name of IoTDevice"})
+                                          "content": "Generate and execute a python code to insert in the Firewall dataset these top IPs excepting 130.112.80.168 which seems like a legit one."})
         st.session_state.DEMO_MODE_STEP += 1
-        time.sleep(3)
+        time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
         st.rerun()
+        ##########################################
+
 
 # Switch between the use cases
 DEMO_TRIGGER_MSG_FUNC = None
@@ -434,6 +494,8 @@ display_chat_history()
 
 llm_response_func = generate_cloud_llm_response_baseversion if USE_BASE_CLOUD_MODEL is True else \
     generate_local_llm_response_dynabicModel
+
+ll_history_update_func = history_update_cloud_llm if USE_BASE_CLOUD_MODEL is True else history_update_local_llm
 
 # User-provided prompt
 if prompt := st.chat_input(disabled=not replicate_api and LOCAL_CHATBOT_MODEL is None):
@@ -465,32 +527,41 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                 # and after that produces the output to the question
                 need_to_ignore_standalone_question_chain = LOCAL_CHATBOT_MODEL.hasHistoryMessages()
 
-            # TODO: fix second param to work for python code too!
-            response, isfullConversationalType = llm_response_func(
-                prompt, add_to_history=False) if debug_model == 0 else "dummy debug response"
+            add_to_hist = True 
+            use_history = True 
+            response_streamer, isfullConversationalType, source_code_tool, source_code_ui, tool_code_needs_confirm = generate_local_llm_response_dynabicModel(
+                prompt, add_to_history=add_to_hist, use_history=use_history) if debug_model == 0 else "dummy debug response"
             if not isfullConversationalType:
                 need_to_ignore_standalone_question_chain = False
             placeholder = st.empty()
             full_response = ''
 
             if need_to_ignore_standalone_question_chain:
-                for item in response:
+                for item in response_streamer:
                     pass
                 placeholder.markdown("<br>")
 
-            for item in response:
+            for item in response_streamer:
                 full_response += item
                 placeholder.markdown(full_response)
 
+
             # Parse a bit the response
             if not USE_BASE_CLOUD_MODEL:
-                res = LOCAL_CHATBOT_MODEL.solveFunctionCalls(full_response)
+                # res = LOCAL_CHATBOT_MODEL.solveFunctionCalls(full_response, do_history_update=add_to_hist)
+
                 if DEMO_MODE and DEMO_MODE_SCRIPT:
-                    time.sleep(5)
+                    time.sleep(SLEEP_TIME_BETWEEN_QUESTIONS)
+
             # if res is False:
             placeholder.markdown(full_response)
 
-    message = {"role": "assistant", "content": full_response}
+    message = {"role": "assistant",
+               "content": full_response,
+               "source_code_tool": source_code_tool,
+               "source_code_ui": source_code_ui,
+               "tool_code_needs_confirm": tool_code_needs_confirm}
+
     st.session_state.messages.append(message)
     st.rerun()
 

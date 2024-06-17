@@ -8,7 +8,7 @@ import pydeck as pdk
 from typing import Union, Dict, List, Tuple, Optional
 
 
-def shopComparativeColumnsDatasets(dataFrame: Union[str, pd.DataFrame], other: Union[str, pd.DataFrame]=None):
+def showComparativeColumnsDatasets(dataFrame: Union[str, pd.DataFrame], other: Union[str, pd.DataFrame]=None):
     interested_columns = ['ip', 'id', 'lat', 'lon']
 
     chart_data = dataFrame if isinstance(dataFrame, pd.DataFrame) else pd.read_csv(dataFrame)
@@ -89,6 +89,6 @@ if __name__ == '__main__':
 
 
     print(os.getcwd())
-    st.write("A:Here is the map, first is the now version, I will invoke FUNC_CALL shopComparativeColumnsDatasets with Params '../../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_True.csv' '../../../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_False.csv'")
+    st.write("A:Here is the map, first is the now version, I will invoke FUNC_CALL showComparativeColumnsDatasets with Params 'SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_True.csv' 'SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_False.csv'")
 
-    shopComparativeColumnsDatasets("../../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_True.csv", "../../RAGSupport/dataForRAG/SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_False.csv")
+    showComparativeColumnsDatasets("SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_True.csv", "SmartHome_DDoSSnapshot_Data/DATASET_LOGS_HACKED_False.csv")

@@ -4,15 +4,16 @@ from userUtils import SecurityOfficer
 import userUtils
 from databaseUtils import CredentialsDB
 from timeit import default_timer
-
-RELATIVE_PATH_TO_LOCAL_LLM_TRAINED = "../"
-
+import os
 import sys
 
-sys.path.append(RELATIVE_PATH_TO_LOCAL_LLM_TRAINED)
+from projsecrets import project_path
+
+# Starting from UI folder?
+if not os.path.exists("./UI"):
+    sys.path.append("../")
 
 from LLM.QuestionAndAnswerUtils import *
-
 
 # Which platform for feedback retention, either trubrics or manual processing
 option_use_trubrics = True
@@ -76,7 +77,8 @@ def getLocalChatBotModelInstance():
         # but relative to the model's path!
         import os
         cwd = os.getcwd()
-        os.chdir(RELATIVE_PATH_TO_LOCAL_LLM_TRAINED)
+        if cwd != project_path:
+            os.chdir(project_path)
         cwd_new = os.getcwd()
         print(f"Changed directory to: {cwd_new}")
 
@@ -87,8 +89,7 @@ def getLocalChatBotModelInstance():
             debug=False,
             streamingOnAnotherThread=True,
             demoMode=False,
-            noInitialize=False,
-            generation_params=QASystem.generation_params_greedy)
+            noInitialize=False)
 
         # Changing back here
         os.chdir(cwd)
