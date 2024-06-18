@@ -381,7 +381,7 @@ def register_user_preferences(form_name: str, location: str = 'main') -> bool:
 
     user.politely = Preference_Politely.POLITE_PRESENTATION \
         if register_user_form.toggle('Use polite formulations', True) is True \
-        else Preference_Politely.FORMAL_PRESENTATION
+        else Preference_Politely.FRIENDLY_PRESENTATION
 
     avatarsList = ["Data/characters/woman.png", "Data/characters/man.png", "Data/characters/None.png"]
     img = image_select("Select which avatar you would like between the first two, or the last if you don't want one.", avatarsList)

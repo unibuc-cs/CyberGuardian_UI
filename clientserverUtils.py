@@ -1,17 +1,16 @@
 import streamlit as st
-
-from userUtils import SecurityOfficer
-import userUtils
-from databaseUtils import CredentialsDB
-from timeit import default_timer
 import os
 import sys
-
-from projsecrets import project_path
+from timeit import default_timer
 
 # Starting from UI folder?
 if not os.path.exists("./UI"):
     sys.path.append("../")
+
+import projsecrets
+from userUtils import SecurityOfficer
+import userUtils
+from databaseUtils import CredentialsDB
 
 from LLM.QuestionAndAnswerUtils import *
 

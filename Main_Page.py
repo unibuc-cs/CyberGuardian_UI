@@ -1,8 +1,6 @@
 
 import streamlit as st
 import clientserverUtils as csu
-import userUtils
-from databaseUtils import CredentialsDB
 from userUtils import SecurityOfficer
 
 # Init the credentials database

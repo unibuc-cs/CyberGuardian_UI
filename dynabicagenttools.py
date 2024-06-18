@@ -17,9 +17,13 @@ import random
 from datetime import datetime
 from typing import Union, Dict, List, Tuple, Optional, Any
 import sys
+import projsecrets
 from projsecrets import project_path, TOKEN_CODE_EXEC_CONFIRM
 import textwrap
 sys.path.append(project_path)
+
+import userUtils
+import clientserverUtils as csUtils
 
 RAG_DATA_PATH = os.path.join(project_path, "RAGSupport", "dataForRAG")
 thismodule = sys.modules[__name__]
@@ -27,16 +31,21 @@ thismodule = sys.modules[__name__]
 def remove_double_quota(input_str: str) -> str:
     if input_str is None:
         return None
-    if input_str[0] == '"' and input_str[-1] == '"':
-        return input_str[1:-1]
-    if input_str[0] == "'" and input_str[-1] != "'":
-        return input_str[1:-1]
+
+    if type(input_str) is str:
+        if input_str[0] == '"' and input_str[-1] == '"':
+            return input_str[1:-1]
+        if input_str[0] == "'" and input_str[-1] != "'":
+            return input_str[1:-1]
+    else:
+        for i in range(len(input_str)):
+            input_str[i] = remove_double_quota(input_str[i])
 
     return input_str
 
 from CyberGuardianLLM import logger
 
-def hook_call(func_name:str, args, **kwargs) -> Tuple[str, str, str, bool]:
+def hook_call(func_name:str, args, **kwargs) -> Optional[str]:
     logger.info(f"Hook function called. func name {func_name}. Args: {args}  kwargs: {kwargs}")
 
     # Solve the folder path for reading data
@@ -46,14 +55,21 @@ def hook_call(func_name:str, args, **kwargs) -> Tuple[str, str, str, bool]:
     try:
         # Check if the request is for plain code execution or for a function call inside the module
         if func_name is None:
-            # assert func_name is not None, ("Function name should not be provided, "
-            #                                "in this case put the code directly in args as a string")
-            try:
+            # Check user credentials and permissions
+            # Check if the user has the permission to execute code
+            current_user_profile: userUtils.SecurityOfficer = csUtils.getCurrentUser()
+            if current_user_profile.AC_Permission < current_user_profile.AC_Permission.EXECUTE:
+                # If the user does not have the permission to update the firewall rules, create a ticket to the manager
+
+                additional_python_ui_code = f'FUNC="create_ticket_ui" PARAMS=["## :red[You do not have the permission to execute code. A ticket with your confirmed code will be sent to your manager to approve the operation]"]'
+                return additional_python_ui_code
+
+            else:
+            # If it does, update the firewall rules by calling the python code
                 exec(args, globals(), locals())
-                return "Code executed successfully", "", "", False
-            except Exception as e:
-                logger.error(f"Error in code execution: {e}")
-                return "Error in code execution", "", "", False
+                return "Code executed successfully"
+
+        # This is a function call with arguments
         else:
             # call the function to get the response text and the python code to show the UI
             func = getattr(thismodule, func_name)
@@ -284,7 +300,7 @@ def showResourceUtilizationComparison_v2_UI(nonHackedPath: str, hackedPath: str)
     return response_text, python_tool_code, python_ui_code
 
 @st.cache_data
-def showLastNGetQueriesFromTopM_demandingIPs_UI(N: int = 10, M: int = 3, dataset: Union[pd.DataFrame, str] = None):
+def showLastNGetQueriesFromTopM_demandingIPs_UI(N: int = 10, M: int = 3, dataset: Union[pd.DataFrame, str] = None) ->Union[str, None]:
     prev_cwd = os.getcwd()
     os.chdir(RAG_DATA_PATH)
 
@@ -315,6 +331,8 @@ def showLastNGetQueriesFromTopM_demandingIPs_UI(N: int = 10, M: int = 3, dataset
     st.dataframe(df_grouped.style.apply(color_coding, axis=1), hide_index=True)
 
     os.chdir(prev_cwd)
+
+
 
 @st.cache_data()
 def showResourceUtilizationComparison_v2(nonHackedPath: str, hackedPath: str)  -> Tuple[str, str, str, bool]:
@@ -367,8 +385,16 @@ def showCSVTable(path: str, *kwargs) -> str:
 
     return df.to_string()
 
+
+# Create a ticket using the provided message and parameters
+def create_ticket_ui(msg: str, *params) -> str:
+    # Just a dummy example, not really creating any ticket, left as a placeholder for user side customization
+    result = msg
+    return result
+
+
 #@st.cache_data()
-def show_data_table(#needs_confirm_first: bool,
+def update_firewall_data_ui(#needs_confirm_first: bool,
                     path: str, *rowsToHighlight):
     prev_cwd = os.getcwd()
     os.chdir(RAG_DATA_PATH)
@@ -427,11 +453,13 @@ def firewallUpdate(*kwargs) ->  Tuple[str, str, str, bool]:
 
     python_tool_code = textwrap.dedent(python_tool_code)
     
-    python_ui_code = (f'FUNC="show_data_table" PARAMS=["Hospital_DDoSSnapshot_Data/FIREWALL_PROCESSES.csv", {to_highlight_ips}]')
-    response_text = f"Updated the firewall rules for the IPs: {param_ips} with the context: {is_except} and {is_allow}"
-    tool_code_needs_confirm = True
 
-    # Show the updated datatable
+    python_ui_code = (
+        f'FUNC="update_firewall_data_ui" PARAMS=["Hospital_DDoSSnapshot_Data/FIREWALL_PROCESSES.csv", '
+        f'{to_highlight_ips}]')
+
+    # Always confirm the code execution with the user first
+    tool_code_needs_confirm = True
 
     response_text = (f"Do you agree to update the firewall rules using the following source code?\n "
                      f"Press confirm if you do:\n")
