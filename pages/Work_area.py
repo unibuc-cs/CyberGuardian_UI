@@ -22,7 +22,7 @@ from projsecrets import project_path, TOKEN_CODE_EXEC_CONFIRM, HOOK_FUNC_NAME_TO
 dynabicFunctionsUIModule = importlib.import_module("dynabicagenttools")
 
 import os
-from demoSupport import UseCase, USE_CASE
+from demoSupport import UseCase, USE_CASE, check_demo_use_case
 
 if csu.option_use_trubrics:
     from trubrics.integrations.streamlit import FeedbackCollector
@@ -61,6 +61,7 @@ if debug == 0:  # Require signin if not logged in
 
     csu.showLoggedUserSidebar()
 
+check_demo_use_case() # Could switch at runtime
 DEMO_MODE = (USE_BASE_CLOUD_MODEL is False) and (USE_CASE != UseCase.Default)
 DEMO_MODE_SCRIPT = True # If true, the script will be run without user input
 
@@ -201,8 +202,8 @@ if 'g_DemoTimer' not in st.session_state:
     st.session_state.g_DemoTimer: threading.Timer = None
     FIRST_TIME_DEMOTIMER_CREATION = True
     st.session_state.DEMO_MODE_TRIGGERED = False
-    st.session_state.DEBUG_SKIP_TO_STEP = 4 # None # Skip to a specific step in the demo
-    st.session_state.DEBUG_SKIP_JUMP_TO_NEXT = 6  # None # Jump to this step after the previous skip step
+    st.session_state.DEBUG_SKIP_TO_STEP = None # 4 # None # Skip to a specific step in the demo
+    st.session_state.DEBUG_SKIP_JUMP_TO_NEXT = None # 6  # None # Jump to this step after the previous skip step
 
 def check_triggers():
     if csu.isTriggered(cancel_trigger=False):
